@@ -14,7 +14,7 @@ A GRPC server wrapper that only needs to provide Scala classes.
 // file project/plugin.sbt
 
 
-addSbtPlugin("me.binwang" % "scala2grpc-plugin" % "0.1.0-SNAPSHOT")
+addSbtPlugin("me.binwang.scala2grpc" % "plugin" % "0.1.0-SNAPSHOT")
 addSbtPlugin("com.lightbend.akka.grpc" % "sbt-akka-grpc" % "2.1.0") // needed if you want to run GRPC server
 
 ```
@@ -30,7 +30,7 @@ enablePlugins(AkkaGrpcPlugin) // needed if you want to run GRPC server
 
 grpcGeneratorMainClass := "me.binwang.example.GenerateGRPC" // Set this class to the object defined below
 
-libraryDependencies += "me.binwang" %% "scala2grpc-generator" % "0.1.0-SNAPSHOT"
+libraryDependencies += "me.binwang.scala2grpc" %% "generator" % "0.1.0-SNAPSHOT"
 
 ```
 

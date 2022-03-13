@@ -3,7 +3,11 @@ import sbt.Keys.{libraryDependencies, organization}
 name := "scala2grpc"
 
 version := "0.1.0-SNAPSHOT"
-organization := "me.binwang"
+val groupId = "me.binwang.scala2grpc"
+
+organization := groupId
+
+publishTo := sonatypePublishToBundle.value
 
 lazy val scala212 = "2.12.13"
 lazy val scala213 = "2.13.1"
@@ -23,10 +27,9 @@ lazy val root = (project in file("."))
   )
 
 lazy val generator = (project in file("generator"))
-  .withId("scala2grpc-generator")
   .enablePlugins(AkkaGrpcPlugin)
   .settings(
-    organization := "me.binwang",
+    organization := groupId,
     crossScalaVersions := supportedScalaVersions,
     libraryDependencies ++= Seq(
       "co.fs2" %% "fs2-core" % "2.5.10",
@@ -44,10 +47,9 @@ lazy val generator = (project in file("generator"))
   )
 
 lazy val plugin = (project in file("plugin"))
-  .withId("scala2grpc-plugin")
   .enablePlugins(SbtPlugin)
   .settings(
-    organization := "me.binwang",
-    name := "scala2grpc-plugin",
+    organization := groupId,
+    name := "plugin",
     scalaVersion := scala212
   )
