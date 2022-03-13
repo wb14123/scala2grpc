@@ -22,8 +22,6 @@ addSbtPlugin("com.lightbend.akka.grpc" % "sbt-akka-grpc" % "2.1.0") // needed if
 ```
 // file build.sbt
 
-import me.binwang.scala2grpc.Scala2GrpcPlugin.AutoImport.grpcGeneratorMainClass
-
 enablePlugins(Scala2GrpcPlugin)
 enablePlugins(AkkaGrpcPlugin) // needed if you want to run GRPC server
 

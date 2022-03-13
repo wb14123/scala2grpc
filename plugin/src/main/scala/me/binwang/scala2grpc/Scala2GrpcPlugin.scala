@@ -1,11 +1,11 @@
 package me.binwang.scala2grpc
 
-import me.binwang.scala2grpc.Scala2GrpcPlugin.AutoImport.{generateGRPCCode, generateProto, grpcGenCodeDirectory, grpcGeneratorMainClass, protobufDirectory}
+import me.binwang.scala2grpc.Scala2GrpcPlugin.autoImport.{generateGRPCCode, generateProto, grpcGenCodeDirectory, grpcGeneratorMainClass, protobufDirectory}
 import sbt._
 import sbt.Keys._
 
 object Scala2GrpcPlugin extends AutoPlugin {
-  object AutoImport {
+  object autoImport {
     val protobufDirectory = settingKey[File]("The output directory for generated protocol buffer file")
     val grpcGenCodeDirectory = settingKey[File]("The output directory for generated grpc code")
     val grpcGeneratorMainClass = settingKey[String]("The main class for GRPC generator")
