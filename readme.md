@@ -43,9 +43,9 @@ import me.binwang.scala2grpc.GRPCGenerator
 object GenerateGRPC extends GRPCGenerator {
 
   // Add `option java_package = "me.binwang.example.grpc";` to the top of the generated GRPC proto file
-  override val protoJavaPackage: String = "me.binwang.rss.grpc"
+  override val protoJavaPackage: String = "me.binwang.example.grpc"
 
-  // Add `package rss` at the top of generated GRPC proto file
+  // Add `package example` at the top of generated GRPC proto file
   override val protoPackage: String = "example"
 
   // Optional: if there are unsupported types in Scala classes, use this map to define the type mapping
