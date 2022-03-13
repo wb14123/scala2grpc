@@ -42,6 +42,6 @@ trait GrpcTypeTranslator {
       }
     }
   }
-
-
 }
+
+object DefaultGrpcTypeTranslator extends GrpcTypeTranslator

@@ -16,7 +16,7 @@ trait GRPCGenerator {
   val serviceClasses: Seq[Type]
 
   val customTypeMap: Map[String, Type] = Map()
-  val implicitTransformClass: Option[Class[_]] = None
+  val implicitTransformClass: Option[Class[_]] = Some(DefaultGrpcTypeTranslator.getClass)
 
   def main(args: Array[String]): Unit = {
     if (args.length < 2) {
