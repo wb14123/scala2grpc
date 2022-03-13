@@ -128,7 +128,7 @@ The object `GenerateGRPC` you defined above inheritted a method `getHandlers` th
     val webService = WebHandler.grpcWebHandler(handlers: _*) // for grpc web
     val service = ServiceHandler.concatOrNotFound(handlers: _*)
 
-    val host = "0.0.0.0" config.getString("grpc.ip")
+    val host = "0.0.0.0"
     val port = 8888
     val webPort = 8889 // for grpc web
 
