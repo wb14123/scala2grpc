@@ -7,7 +7,7 @@ A GRPC server wrapper that only needs to provide Scala classes.
 
 ## Usage
 
-1. Add dependencies and config `build.sbt`:
+### 1. Add dependencies and config `build.sbt`:
 
 
 ```
@@ -34,7 +34,7 @@ libraryDependencies += "me.binwang" %% "scala2grpc-generator" % "0.1.0-SNAPSHOT"
 
 ```
 
-2. Create an object to implement `GRPCGenerator`
+### 2. Create an object to implement `GRPCGenerator`
 
 
 ```
@@ -73,7 +73,7 @@ object GenerateGRPC extends GRPCGenerator {
 
 ```
 
-3. (Optional) Define an object for implicit type transform methods
+### 3. (Optional) Define an object for implicit type transform methods
 
 If you have defined `customTypeMap`, you need to set `implicitTransformClass` to an object that contains the implicit methods to transform these types. For example:
 
@@ -88,7 +88,7 @@ object ModelTranslator extends GrpcTypeTranslator {
 ```
 
 
-4. Run sbt task to generate GRPC proto and code
+### 4. Run sbt task to generate GRPC proto and code
 
 Now you can run sbt task to generate grpc files. If any of the model or service classes has been changed, you also need to re-run the task before compile the code.
 
@@ -114,7 +114,7 @@ sbt generateProto
 You don't need to run clean in this case.
 
 
-5. Create a GRPC server
+### 5. Create a GRPC server
 
 The object `GenerateGRPC` you defined above inheritted a method `getHandlers` that generates GRPC handlers for akka-grpc. Here is an example about how to use it:
 
