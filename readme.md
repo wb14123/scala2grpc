@@ -141,3 +141,13 @@ The object `GenerateGRPC` you defined above inherited a method `getHandlers` tha
  }
 
 ```
+
+## Publish
+
+For maintainers only
+
+```
+sbt +publishSigned
+sbt +sonatypeBundleRelease
+```
+

@@ -1,4 +1,5 @@
-import sbt.Keys.{libraryDependencies, organization}
+import sbt.Keys.{libraryDependencies, organization, publishTo}
+import xerial.sbt.Sonatype.autoImport.sonatypePublishToBundle
 
 name := "scala2grpc"
 
@@ -7,6 +8,7 @@ val groupId = "me.binwang.scala2grpc"
 
 organization := groupId
 
+sonatypeCredentialHost := "s01.oss.sonatype.org"
 publishTo := sonatypePublishToBundle.value
 
 lazy val scala212 = "2.12.13"
@@ -23,7 +25,9 @@ val supportedScalaVersions = List(scala212, scala213)
 lazy val root = (project in file("."))
   .aggregate(generator, plugin)
   .settings(
-    crossScalaVersions := Nil
+    crossScalaVersions := Nil,
+    publishTo := sonatypePublishToBundle.value,
+    sonatypeCredentialHost := "s01.oss.sonatype.org"
   )
 
 lazy val generator = (project in file("generator"))
@@ -31,6 +35,8 @@ lazy val generator = (project in file("generator"))
   .settings(
     organization := groupId,
     crossScalaVersions := supportedScalaVersions,
+    publishTo := sonatypePublishToBundle.value,
+    sonatypeCredentialHost := "s01.oss.sonatype.org",
     libraryDependencies ++= Seq(
       "co.fs2" %% "fs2-core" % "2.5.10",
 
@@ -51,5 +57,7 @@ lazy val plugin = (project in file("plugin"))
   .settings(
     organization := groupId,
     name := "plugin",
-    scalaVersion := scala212
+    scalaVersion := scala212,
+    publishTo := sonatypePublishToBundle.value,
+    sonatypeCredentialHost := "s01.oss.sonatype.org"
   )
