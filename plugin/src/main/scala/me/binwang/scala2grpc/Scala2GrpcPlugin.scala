@@ -20,7 +20,7 @@ object Scala2GrpcPlugin extends AutoPlugin {
       val outputPath = protobufDirectory.value.getPath
       val mainClass = grpcGeneratorMainClass.value
       Def.task {
-        (runMain in Compile).toTask(s" $mainClass proto $outputPath").value
+        (Compile / runMain).toTask(s" $mainClass proto $outputPath").value
       }
     }.value,
     grpcGenCodeDirectory := crossTarget.value / "grpc-gen" / "main",
@@ -28,7 +28,7 @@ object Scala2GrpcPlugin extends AutoPlugin {
       val outputPath = grpcGenCodeDirectory.value.getPath
       val mainClass = grpcGeneratorMainClass.value
       Def.task {
-        (runMain in Compile).toTask(s" $mainClass code $outputPath").value
+        (Compile / runMain).toTask(s" $mainClass code $outputPath").value
       }
     }.value ,
     generateGRPCCode := (generateGRPCCode dependsOn generateProto).value,

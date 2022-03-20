@@ -16,7 +16,7 @@ It generates GRPC proto file from Scala classes, and also provides an easy to us
 // file project/plugin.sbt
 
 
-addSbtPlugin("me.binwang.scala2grpc" % "plugin" % "0.1.0-SNAPSHOT")
+addSbtPlugin("me.binwang.scala2grpc" % "plugin" % "0.1.0")
 addSbtPlugin("com.lightbend.akka.grpc" % "sbt-akka-grpc" % "2.1.0") // needed if you want to run GRPC server
 
 ```
@@ -30,7 +30,7 @@ enablePlugins(AkkaGrpcPlugin) // needed if you want to run GRPC server
 
 grpcGeneratorMainClass := "me.binwang.example.GenerateGRPC" // Set this class to the object defined below
 
-libraryDependencies += "me.binwang.scala2grpc" %% "generator" % "0.1.0-SNAPSHOT"
+libraryDependencies += "me.binwang.scala2grpc" %% "generator" % "0.1.0"
 
 ```
 
@@ -147,7 +147,8 @@ The object `GenerateGRPC` you defined above inherited a method `getHandlers` tha
 For maintainers only
 
 ```
+sbt +publishLocal
 sbt +publishSigned
-sbt +sonatypeBundleRelease
+sbt sonatypeBundleRelease
 ```
 
