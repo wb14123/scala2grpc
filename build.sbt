@@ -21,8 +21,6 @@ ThisBuild / developers := List(
   Developer(id="wb14123", name="Bin Wang", email="bin.wang@mail.binwang.me", url=url("https://www.binwang.me"))
 )
 
-resolvers += Resolver.bintrayRepo("streamz", "maven") // for streamz
-
 val akkaVersion = "2.6.18"
 
 val supportedScalaVersions = List(scala212, scala213)
@@ -42,7 +40,7 @@ lazy val generator = (project in file("generator"))
       "co.fs2" %% "fs2-core" % "2.5.10",
 
       // akka
-      "com.github.krasserm" %% "streamz-converter" % "0.13-RC4",
+      "me.binwang.streamz" %% "streamz-converter" % "0.13-RC4",
       "com.typesafe.akka" %% "akka-actor-typed" % akkaVersion,
       "com.typesafe.akka" %% "akka-stream" % akkaVersion,
       "com.typesafe.akka" %% "akka-http" % "10.2.7",
