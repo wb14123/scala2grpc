@@ -104,6 +104,7 @@ class CodeGenerator(codePackage: String, translatorPackage: String, outputDirect
   }
 
   private def generateMethodCode(method: MethodSymbol): String = {
+    logger.info(s"Generate method $method")
     val methodName = Names.serviceMethodName(method)
     val returnName = Names.responseMsgName(method)
     val returnType = method.returnType
@@ -137,30 +138,42 @@ class CodeGenerator(codePackage: String, translatorPackage: String, outputDirect
   }
 
   private def generateMethodParams(method: MethodSymbol): String = {
-    method.paramLists.head.map(generateMethodParamCode).mkString(", ")
+    method.paramLists.head.map(x => generateMethodParamCode(x.name.toString, x.typeSignature)).mkString(", ")
   }
 
-  private def generateMethodParamCode(param: Symbol): String = {
-    val rawParamType = param.typeSignature
+  private def generateMethodParamCode(paramName: String, rawParamType: Type, deep: Int = 0): String = {
     /*
     Take care of wrapped types. The supported wrapped types are now hard coded, may need to think about how to let user
     pass in customer configurations.
      */
-    val paramType = if (rawParamType.typeSymbol == typeOf[Resource[IO, _]].typeSymbol) {
-      rawParamType.typeArgs(1)
+    val (paramType, wrapperType) = if (rawParamType.typeSymbol == typeOf[Resource[IO, _]].typeSymbol) {
+      (rawParamType.typeArgs(1), None)
     } else if(rawParamType.typeSymbol == typeOf[Option[_]].typeSymbol) {
-      rawParamType.typeArgs.head
+      (rawParamType.typeArgs.head, Some("Option"))
+    } else if (rawParamType.typeSymbol == typeOf[Seq[_]].typeSymbol) {
+      (rawParamType.typeArgs.head, Some("List"))
     } else {
-      rawParamType
+      (rawParamType, None)
     }
     val realType = customTypeMap.getOrElse(paramType.toString, paramType)
     val typeName = realType.toString.split('.').last
-    val rawParam = "in." + param.name
-    if (PRIMITIVE_TYPES.contains(typeName)) {
-      rawParam
+    val wrappedParamName = if (deep > 0) {
+      s"in.$paramName" + wrapperType.getOrElse("")
     } else {
-      val insideTypeName = translatorPackage + "." + Names.translatorClassName(paramType)
-      s"$insideTypeName.fromGRPC($rawParam.get)"
+      s"in.$paramName"
+    }
+    if (PRIMITIVE_TYPES.contains(typeName)) {
+      wrappedParamName
+    } else {
+      if (wrapperType.isEmpty) {
+        val insideTypeName = translatorPackage + "." + Names.translatorClassName(paramType)
+        val rawParam = if (deep > 0) "in" else s"in.$paramName.get"
+        s"$insideTypeName.fromGRPC($rawParam)"
+      } else if (wrapperType.get.equals("Option")) {
+        s"$wrappedParamName.map(in => ${generateMethodParamCode(paramName, paramType, deep + 1)})"
+      } else {
+        s"$wrappedParamName.map(in => ${generateMethodParamCode(paramName, paramType, deep + 1)})"
+      }
     }
   }
 
