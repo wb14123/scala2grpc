@@ -5,6 +5,65 @@ Scala2grpc is a SBT plugin that makes GRPC with Scala easier.
 
 It generates GRPC proto file from Scala classes, and also provides an easy to use interface to let you create a GRPC server from those classes. You don't need to change any existing Scala code in order to do that, so the GRPC part doesn't pollute your pure Scala code.
 
+## Example
+
+Define models and services in pure Scala:
+
+```Scala
+case class People(
+    firstName: String,
+    lastName: String,
+)
+
+class PeopleService() {
+  def getName(people: People): IO[String] = {
+    IO.pure(people.firstName + " " + people.lastName)
+  }
+}
+
+```
+
+After correct configuration without touch the Scala code above, it will generate GRPC proto file like this:
+
+
+```
+// Define People
+
+message People {
+    string firstName = 1;
+    string lastName = 2;
+}
+
+
+// Define me.binwang.scala2grpc.grpc.generator.PeopleService
+
+message GetNameRequest {
+    People people = 1;
+}
+message GetNameResponse {
+    string result = 1;
+}
+
+service PeopleAPI {
+    rpc GetName (GetNameRequest) returns (GetNameResponse);
+}
+
+```
+
+It will also generate Scala files to let you start a GRPC service like this:
+
+```Scala
+val peopleService = new PeopleService()
+val handlers = GenerateGRPC.getHandlers(Seq(peopleService))
+val service = ServiceHandler.concatOrNotFound(handlers: _*)
+
+Http().newServerAt(host, port).bind(service).flatMap { _ =>
+      println(s"Started GRPC server at $host:$port")
+}
+
+```
+
+See usages below for more details about how to use it.
 
 
 ## Usage
@@ -37,7 +96,7 @@ libraryDependencies += "me.binwang.scala2grpc" %% "generator" % "0.1.0"
 ### 2. Create an object to implement `GRPCGenerator`
 
 
-```
+```Scala
 import me.binwang.scala2grpc.GRPCGenerator
 
 object GenerateGRPC extends GRPCGenerator {
@@ -77,8 +136,7 @@ object GenerateGRPC extends GRPCGenerator {
 
 If you have defined `customTypeMap`, you need to set `implicitTransformClass` to an object that contains the implicit methods to transform these types. For example:
 
-```
-
+```Scala
 object ModelTranslator extends GrpcTypeTranslator {
 
   implicit def longToDateTime(timestamp: Long): ZonedDateTime = ZonedDateTime.ofInstant(Instant.ofEpochMilli(timestamp), ZoneId.systemDefault())
@@ -118,7 +176,7 @@ You don't need to run clean in this case.
 
 The object `GenerateGRPC` you defined above inherited a method `getHandlers` that generates GRPC handlers for akka-grpc. Here is an example about how to use it:
 
-```
+```Scala
   def main(args: Array[String]): Unit = {
     val exampleService1 = new ExampleService1(...) // create an instance of your service class
     val exampleService2 = new ExampleService2(...) // create an instance of your service class
