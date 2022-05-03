@@ -1,9 +1,14 @@
 # Scala2grpc
 
 
-Scala2grpc is a SBT plugin that makes GRPC with Scala easier.
+Scala2grpc is a SBT plugin to make it non-invasive to use gRPC with Scala.
 
-It generates GRPC proto file from Scala classes, and also provides an easy to use interface to let you create a GRPC server from those classes. You don't need to change any existing Scala code in order to do that, so the GRPC part doesn't pollute your pure Scala code.
+Normally gRPC generates models and API interfaces. And in order to create a gRPC server, the program needs to use the generated models to implement generated interfaces. This makes the whole porgram depends on gRPC very heavily.
+
+With this SBT plugin, you can write your code in pure Scala without think about depending on gRPC. It can generate gRPC proto file from Scala classes, and also provides an easy to use interface to let you create a GRPC server from those classes. You don't need to change any existing Scala code in order to do that, so the gRPC part doesn't popute your pure Scala code at all.
+
+The generated gRPC proto file is well formated so you can track it with version control system and share it with other clients.
+
 
 ## Example
 
@@ -23,7 +28,7 @@ class PeopleService() {
 
 ```
 
-After correct configuration without touch the Scala code above, it will generate GRPC proto file like this:
+After some configuration without touching the Scala code above, it will generate GRPC proto file like this:
 
 
 ```
