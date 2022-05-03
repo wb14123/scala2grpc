@@ -168,6 +168,8 @@ sbt compile
 
 `clean` is needed because there maybe outdated generated classes.
 
+Sometimes the generated proto file is conflict with the modified model classes. If this the case, you can delete the proto file and re-generate it.
+
 **If you only want to generate GRPC proto file** without be able to run GRPC server, run this task instead:
 
 ```
