@@ -50,7 +50,8 @@ object Names {
     typ
       .decls
       .sorted
-      .collect { case m: MethodSymbol if m.isPublic && !m.isConstructor && !m.isImplicit => m}
+      .collect { case m: MethodSymbol if m.isPublic && !m.isConstructor && !m.isImplicit && !m.isGetter
+        && !m.isSetter && !m.isStatic => m}
       .filter {m =>
         val isDefault = defaultMethodPattern.findFirstMatchIn(m.name.toString).isDefined
         if (isDefault) {
