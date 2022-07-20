@@ -5,9 +5,11 @@ import com.typesafe.scalalogging.Logger
 
 import java.io.{File, PrintWriter}
 import scala.reflect.runtime.universe._
+import scala.util.matching.Regex
 
 class CodeGenerator(codePackage: String, translatorPackage: String, outputDirectory: String,
-                    customTypeMap: Map[String, Type] = Map(), implicitTranslatorClass: Option[Class[_]] = None) {
+    customTypeMap: Map[String, Type] = Map(), implicitTranslatorClass: Option[Class[_]] = None,
+    enableParamLogging: Boolean, excludeLoggingParam: Seq[Regex], maxParamLoggingLength: Int) {
 
 
   private val logger = Logger(classOf[CodeGenerator])
@@ -72,6 +74,7 @@ class CodeGenerator(codePackage: String, translatorPackage: String, outputDirect
        |import ${serviceType.toString}
        |
        |import scala.concurrent.{ExecutionContext, Future}
+       |import com.typesafe.scalalogging.Logger
        |
        |import io.scalaland.chimney.dsl._
        |""".stripMargin
@@ -90,6 +93,17 @@ class CodeGenerator(codePackage: String, translatorPackage: String, outputDirect
 
     s"""
        |${generateClassHeader(serviceType)} {
+       |
+       |  private val logger = Logger(getClass)
+       |
+       |  private def trimString(s: String, length: Int): String = {
+       |    if (s.length > length) {
+       |      s.substring(0, length) + " ..."
+       |    } else {
+       |      s
+       |    }
+       |  }
+       |
        |$methodStr
        |}
        |""".stripMargin
@@ -131,10 +145,26 @@ class CodeGenerator(codePackage: String, translatorPackage: String, outputDirect
     }
     s"""
        |  override def $methodName(in: ${Names.requestMsgName(method)}): $returnSig = {
+       |    ${generateLogging(method)}
        |    $serviceVarName.$methodName(${generateMethodParams(method)})$transformResult
        |      .$mapMethod
        |  }
        |""".stripMargin
+  }
+
+  private def generateLogging(method: MethodSymbol): String = {
+    if (enableParamLogging) {
+      val params = method.paramLists.head.map { x =>
+        val paramName = s"${method.name}.${x.name}"
+        val exclude = excludeLoggingParam.exists(r => r.pattern.matcher(paramName).matches())
+        val value = if (exclude) "XXX" else s"$${trimString(in.${x.name}.toString(), $maxParamLoggingLength)}"
+        s"${x.name}: $value"
+      }.mkString(", ")
+      s"""logger.info(s"GRPC API invoked, API: ${method.name}, $params")"""
+    } else {
+      s"""logger.info("GRPC API invoked, API: ${method.name}")"""
+    }
+
   }
 
   private def generateMethodParams(method: MethodSymbol): String = {

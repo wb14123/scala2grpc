@@ -7,6 +7,7 @@ import cats.effect.{ContextShift, IO}
 import java.io.File
 import scala.concurrent.{ExecutionContext, Future}
 import scala.reflect.runtime.universe._
+import scala.util.matching.Regex
 
 trait GRPCGenerator {
   val protoJavaPackage: String
@@ -17,6 +18,10 @@ trait GRPCGenerator {
 
   val customTypeMap: Map[String, Type] = Map()
   val implicitTransformClass: Option[Class[_]] = Some(DefaultGrpcTypeTranslator.getClass)
+
+  val enableParamLogging: Boolean = true
+  val excludeLoggingParam: Seq[Regex] = Seq()
+  val maxParamLoggingLength: Int = 1024
 
   def main(args: Array[String]): Unit = {
     if (args.length < 2) {
@@ -60,7 +65,7 @@ trait GRPCGenerator {
     val modelTransformGenerator = new ModelTransformGenerator(protoJavaPackage, protoJavaPackage,
       serviceOutputDirectory, customTypeMap)
     val codeGenerator = new CodeGenerator(protoJavaPackage, protoJavaPackage, serviceOutputDirectory,
-      customTypeMap, implicitTransformClass)
+      customTypeMap, implicitTransformClass, enableParamLogging, excludeLoggingParam, maxParamLoggingLength)
     modelClasses.foreach(modelTransformGenerator.writeTranslator)
     serviceClasses.foreach(codeGenerator.writeService)
     codeGenerator.writeGRPCServerFile(serviceClasses)
