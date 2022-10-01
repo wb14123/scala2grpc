@@ -197,7 +197,7 @@ class CodeGenerator(codePackage: String, translatorPackage: String, outputDirect
     } else {
       if (wrapperType.isEmpty) {
         val insideTypeName = translatorPackage + "." + Names.translatorClassName(paramType)
-        val rawParam = if (deep > 0) "in" else s"in.$paramName.get"
+        val rawParam = if (deep > 0) "in" else if (Names.isEnum(realType)) s"in.$paramName" else s"in.$paramName.get"
         s"$insideTypeName.fromGRPC($rawParam)"
       } else if (wrapperType.get.equals("Option")) {
         s"$wrappedParamName.map(in => ${generateMethodParamCode(paramName, paramType, deep + 1)})"
