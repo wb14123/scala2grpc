@@ -2,8 +2,8 @@ import sbt.Keys.{libraryDependencies, organization, publishTo}
 import sbt.url
 import xerial.sbt.Sonatype.autoImport.sonatypePublishToBundle
 
-lazy val scala212 = "2.12.13"
-lazy val scala213 = "2.13.1"
+lazy val scala212 = "2.12.17"
+lazy val scala213 = "2.13.10"
 
 ThisBuild / version := "0.1.1-SNAPSHOT"
 ThisBuild / organization := "me.binwang.scala2grpc"
@@ -21,7 +21,10 @@ ThisBuild / developers := List(
   Developer(id="wb14123", name="Bin Wang", email="bin.wang@mail.binwang.me", url=url("https://www.binwang.me"))
 )
 
-val akkaVersion = "2.6.18"
+ThisBuild / dependencyCheckAssemblyAnalyzerEnabled := Option(false)
+// ThisBuild / dependencyCheckFailBuildOnCVSS := 4
+
+val akkaVersion = "2.8.0"
 
 val supportedScalaVersions = List(scala212, scala213)
 
@@ -43,11 +46,11 @@ lazy val generator = (project in file("generator"))
       "me.binwang.streamz" %% "streamz-converter" % "0.13-RC4",
       "com.typesafe.akka" %% "akka-actor-typed" % akkaVersion,
       "com.typesafe.akka" %% "akka-stream" % akkaVersion,
-      "com.typesafe.akka" %% "akka-http" % "10.2.7",
+      "com.typesafe.akka" %% "akka-http" % "10.5.0",
 
       // log
-      "ch.qos.logback" % "logback-classic" % "1.2.11",
-      "com.typesafe.scala-logging" %% "scala-logging" % "3.9.4",
+      "ch.qos.logback" % "logback-classic" % "1.4.6",
+      "com.typesafe.scala-logging" %% "scala-logging" % "3.9.5",
     )
   )
 
