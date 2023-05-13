@@ -49,7 +49,7 @@ lazy val generator = (project in file("generator"))
       "com.typesafe.akka" %% "akka-http" % "10.5.0",
 
       // log
-      "ch.qos.logback" % "logback-classic" % "1.4.6",
+      "ch.qos.logback" % "logback-classic" % "1.2.10",
       "com.typesafe.scala-logging" %% "scala-logging" % "3.9.5",
     )
   )
