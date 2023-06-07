@@ -63,7 +63,7 @@ trait GRPCGenerator {
     val serviceOutputDirectory = codeRootDirectory + "/" + protoJavaPackage.replace('.', '/')
     new File(serviceOutputDirectory).mkdirs()
     val modelTransformGenerator = new ModelTransformGenerator(protoJavaPackage, protoJavaPackage,
-      serviceOutputDirectory, customTypeMap)
+      serviceOutputDirectory, customTypeMap, implicitTransformClass)
     val codeGenerator = new CodeGenerator(protoJavaPackage, protoJavaPackage, serviceOutputDirectory,
       customTypeMap, implicitTransformClass, enableParamLogging, excludeLoggingParam, maxParamLoggingLength)
     modelClasses.foreach(modelTransformGenerator.writeTranslator)

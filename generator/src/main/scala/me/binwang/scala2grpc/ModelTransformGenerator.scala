@@ -6,7 +6,7 @@ import java.io.{File, PrintWriter}
 import scala.reflect.runtime.universe._
 
 class ModelTransformGenerator(codePackage: String, grpcPackage: String, outputDirectory: String,
-                              customTypeMap: Map[String, Type] = Map()) {
+    customTypeMap: Map[String, Type] = Map(), implicitTranslatorClass: Option[Class[_]]) {
 
   private val logger = Logger(classOf[ModelTransformGenerator])
   private val keepTypes: Set[String] = customTypeMap.keySet ++ ProtoGenerator.typeMap.keySet.map(_.toString)
@@ -40,10 +40,16 @@ class ModelTransformGenerator(codePackage: String, grpcPackage: String, outputDi
         .map {"      " + _}
         .mkString(",\n")
 
+      val importTranslator = if (implicitTranslatorClass.isDefined) {
+        "import " + implicitTranslatorClass.get.getName.dropRight(1) + "._"
+      } else {
+        ""
+      }
+
       s"""
         |package $codePackage
         |
-        |import me.binwang.rss.grpc.ModelTranslator._
+        |$importTranslator
         |
         |object $className {
         |  def fromGRPC(obj: $grpcType): $typeName = {
