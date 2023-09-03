@@ -23,7 +23,7 @@ class ModelTransformGenerator(codePackage: String, grpcPackage: String, outputDi
 
     val typeName = messageType.toString
     val typeBase = Names.baseTypeName(messageType)
-    val grpcType = grpcPackage + "." + typeBase
+    val grpcType = s"$grpcPackage.grpc_api.$typeBase"
     val className = Names.translatorClassName(messageType)
 
     if (Names.isEnum(messageType)) {

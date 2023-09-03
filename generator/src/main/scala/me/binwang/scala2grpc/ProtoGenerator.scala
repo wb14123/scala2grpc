@@ -124,12 +124,12 @@ class ProtoGenerator(javaPackage: String, grpcPackage: String, outputDirectory: 
   private def getGRPCType(typ: Type): String = {
     val typName = typ.toString
     val typStr = typName.split('.').last
-    typeMap.get(typ) match {
+    typeMap.find(_._1 =:= typ) match {
       case None => customTypeMap.get(typName) match {
         case None => typStr
         case Some(targetTyp) => typeMap.getOrElse(targetTyp, typStr)
       }
-      case Some(str) => str
+      case Some((_, str)) => str
     }
   }
 

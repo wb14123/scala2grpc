@@ -31,20 +31,19 @@ class CodeGenerator(codePackage: String, translatorPackage: String, outputDirect
     logger.info("Generate GRPC service file")
 
     val params = serviceClasses
-      .map(t => s"      case s: ${t.toString} => ${handlerName(t)}.partial(new ${className(t)}(s, ex, cs))")
+      .map(t => s"      case s: ${t.toString} => ${Names.fs2GrpcName(t)}.bindServiceResource[IO](new ${className(t)}(s))")
       .mkString("\n")
 
     val code = s"""package $codePackage
        |
-       |import akka.actor.ActorSystem
        |import $GENERATOR_PACKAGE.AbstractGRPCServer
-       |import akka.http.scaladsl.model.{HttpRequest, HttpResponse}
-       |import scala.concurrent.{Future, ExecutionContext}
-       |import cats.effect.{ContextShift, IO}
+       |import $codePackage.grpc_api._
+       |
+       |import cats.effect.{IO, Resource}
+       |import io.grpc.ServerServiceDefinition
        |
        |class GRPCServer extends AbstractGRPCServer {
-       |  override def getHandlers(services: Seq[Any])(implicit actorSystem: ActorSystem, ex: ExecutionContext, cs: ContextShift[IO]):
-       |      Seq[PartialFunction[HttpRequest, Future[HttpResponse]]]= {
+       |  override def getServiceDefinitions(services: Seq[Any]): Seq[Resource[IO, ServerServiceDefinition]] = {
        |    services.map {
        |$params
        |      case x => throw new Exception(s"No match service implementation found for $$x")
@@ -68,15 +67,14 @@ class CodeGenerator(codePackage: String, translatorPackage: String, outputDirect
   private def generateCodeHeader(serviceType: Type): String = {
     val result = s"""package $codePackage
        |
-       |import akka.NotUsed
-       |import akka.stream.scaladsl.Source
-       |import cats.effect.{ContextShift, IO}
+
+       |import cats.effect.IO
+       |import io.grpc.Metadata
+       |import $codePackage.grpc_api._
        |import ${serviceType.toString}
        |
-       |import scala.concurrent.{ExecutionContext, Future}
        |import com.typesafe.scalalogging.Logger
        |
-       |import io.scalaland.chimney.dsl._
        |""".stripMargin
     if (implicitTranslatorClass.isDefined) {
       result + "\nimport " + implicitTranslatorClass.get.getName.dropRight(1) + "._"
@@ -111,10 +109,8 @@ class CodeGenerator(codePackage: String, translatorPackage: String, outputDirect
 
   private def generateClassHeader(serviceType: Type): String = {
     val serviceTypeName = serviceType.toString.split('.').last
-    s"""class ${className(serviceType)}(
-       |    val $serviceVarName: $serviceTypeName,
-       |    implicit val ex: ExecutionContext,
-       |    implicit val cs: ContextShift[IO]) extends ${Names.apiName(serviceType)}""".stripMargin
+    s"""class ${className(serviceType)}(val $serviceVarName: $serviceTypeName)
+       |  extends ${Names.apiName(serviceType)}Fs2Grpc[IO, Metadata]""".stripMargin
   }
 
   private def generateMethodCode(method: MethodSymbol): String = {
@@ -122,10 +118,10 @@ class CodeGenerator(codePackage: String, translatorPackage: String, outputDirect
     val methodName = Names.serviceMethodName(method)
     val returnName = Names.responseMsgName(method)
     val returnType = method.returnType
-    val (returnSig, insideType, mapMethod) =  if (returnType.typeSymbol == typeOf[IO[_]].typeSymbol) {
-      (s"Future[$returnName]", returnType.typeArgs.head, "toFuture")
+    val (returnSig, insideType) =  if (returnType.typeSymbol == typeOf[IO[_]].typeSymbol) {
+      (s"IO[$returnName]", returnType.typeArgs.head)
     } else if (returnType.typeSymbol == typeOf[fs2.Stream[IO, _]].typeSymbol) {
-      (s"Source[$returnName, NotUsed]", returnType.typeArgs(1), "toAkka")
+      (s"fs2.Stream[IO, $returnName]", returnType.typeArgs(1))
     } else {
       throw new Exception(s"Method return type should be IO or fs2.Stream[IO, _], real method: $method")
     }
@@ -144,10 +140,9 @@ class CodeGenerator(codePackage: String, translatorPackage: String, outputDirect
          |      .map(x => $returnName(result = Option(x)))""".stripMargin
     }
     s"""
-       |  override def $methodName(in: ${Names.requestMsgName(method)}): $returnSig = {
+       |  override def $methodName(in: ${Names.requestMsgName(method)}, ctx: Metadata): $returnSig = {
        |    ${generateLogging(method)}
        |    $serviceVarName.$methodName(${generateMethodParams(method)})$transformResult
-       |      .$mapMethod
        |  }
        |""".stripMargin
   }
@@ -211,8 +206,5 @@ class CodeGenerator(codePackage: String, translatorPackage: String, outputDirect
     s"${Names.apiName(serviceType)}Impl"
   }
 
-  private def handlerName(serviceType: Type): String = {
-    s"${Names.apiName(serviceType)}Handler"
-  }
 
 }

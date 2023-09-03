@@ -1,11 +1,12 @@
 package me.binwang.scala2grpc
 
-import akka.actor.ActorSystem
-import akka.http.scaladsl.model.{HttpRequest, HttpResponse}
-import cats.effect.{ContextShift, IO}
+import cats.effect.{IO, Resource}
+import cats.implicits._
+import fs2.grpc.syntax.all.fs2GrpcSyntaxServerBuilder
+import io.grpc.{ServerBuilder, ServerServiceDefinition}
+import io.grpc.internal.AbstractServerImplBuilder
 
 import java.io.File
-import scala.concurrent.{ExecutionContext, Future}
 import scala.reflect.runtime.universe._
 import scala.util.matching.Regex
 
@@ -35,13 +36,25 @@ trait GRPCGenerator {
     }
   }
 
-  def getHandlers(services: Seq[Any])(implicit actorSystem: ActorSystem, ex: ExecutionContext, cs: ContextShift[IO]): Seq[PartialFunction[HttpRequest, Future[HttpResponse]]] = {
+  def getServiceDefinitions(services: Seq[Any]): Seq[Resource[IO, ServerServiceDefinition]] = {
     Class
       .forName(s"$protoJavaPackage.GRPCServer")
       .getDeclaredConstructor()
       .newInstance()
       .asInstanceOf[AbstractGRPCServer]
-      .getHandlers(services)
+      .getServiceDefinitions(services)
+  }
+
+  def addServicesToServerBuilder[T <: ServerBuilder[T]](serverBuilder: T, services: Seq[Any]): Resource[IO, T] = {
+    val svcDefs = getServiceDefinitions(services)
+    if (svcDefs.isEmpty) {
+      Resource.pure(serverBuilder)
+    } else {
+      val sb = svcDefs.head.map(serverBuilder.addService)
+      svcDefs.tail.foldRight(sb) { case (serviceDefResource, curBuilder) =>
+        serviceDefResource.flatMap(x => curBuilder.map(_.addService(x)))
+      }
+    }
   }
 
   private def printUsage(): Unit = {

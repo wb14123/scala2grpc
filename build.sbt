@@ -5,7 +5,7 @@ import xerial.sbt.Sonatype.autoImport.sonatypePublishToBundle
 lazy val scala212 = "2.12.17"
 lazy val scala213 = "2.13.10"
 
-ThisBuild / version := "0.1.3-SNAPSHOT"
+ThisBuild / version := "1.0.0-SNAPSHOT"
 ThisBuild / organization := "me.binwang.scala2grpc"
 ThisBuild / scalaVersion := scala212
 ThisBuild / publishTo := sonatypePublishToBundle.value
@@ -24,7 +24,6 @@ ThisBuild / developers := List(
 ThisBuild / dependencyCheckAssemblyAnalyzerEnabled := Option(false)
 // ThisBuild / dependencyCheckFailBuildOnCVSS := 4
 
-val akkaVersion = "2.8.0"
 
 val supportedScalaVersions = List(scala212, scala213)
 
@@ -35,18 +34,12 @@ lazy val root = (project in file("."))
   )
 
 lazy val generator = (project in file("generator"))
-  .enablePlugins(AkkaGrpcPlugin)
+  .enablePlugins(Fs2Grpc)
   .settings(
     name := "generator",
     crossScalaVersions := supportedScalaVersions,
     libraryDependencies ++= Seq(
-      "co.fs2" %% "fs2-core" % "2.5.10",
-
-      // akka
-      "me.binwang.streamz" %% "streamz-converter" % "0.13-RC4",
-      "com.typesafe.akka" %% "akka-actor-typed" % akkaVersion,
-      "com.typesafe.akka" %% "akka-stream" % akkaVersion,
-      "com.typesafe.akka" %% "akka-http" % "10.5.0",
+      "io.grpc" % "grpc-netty-shaded" % scalapb.compiler.Version.grpcJavaVersion,
 
       // log
       "ch.qos.logback" % "logback-classic" % "1.2.10",

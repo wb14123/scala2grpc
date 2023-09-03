@@ -1,13 +1,10 @@
+
 package me.binwang.scala2grpc
 
-import akka.actor.ActorSystem
-import akka.http.scaladsl.model.{HttpRequest, HttpResponse}
-import cats.effect.{ContextShift, IO}
-
-import scala.concurrent.{ExecutionContext, Future}
+import cats.effect.{IO, Resource}
+import io.grpc.ServerServiceDefinition
 
 
 trait AbstractGRPCServer {
-  def getHandlers(services: Seq[Any])(implicit actorSystem: ActorSystem, ex: ExecutionContext, cs: ContextShift[IO]
-    ): Seq[PartialFunction[HttpRequest, Future[HttpResponse]]]
+  def getServiceDefinitions(services: Seq[Any]): Seq[Resource[IO, ServerServiceDefinition]]
 }

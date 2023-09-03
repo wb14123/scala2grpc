@@ -13,6 +13,10 @@ object Names {
     typ.typeSymbol.name.toString.replace("Service", "API")
   }
 
+  def fs2GrpcName(typ: Type): String = {
+    apiName(typ) + "Fs2Grpc"
+  }
+
   def methodName(method: MethodSymbol): String = {
     method.name.toString.capitalize
   }
