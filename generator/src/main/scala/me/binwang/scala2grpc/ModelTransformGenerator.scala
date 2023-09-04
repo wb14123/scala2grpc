@@ -1,6 +1,6 @@
 package me.binwang.scala2grpc
 
-import com.typesafe.scalalogging.Logger
+import org.slf4j.LoggerFactory
 
 import java.io.{File, PrintWriter}
 import scala.reflect.runtime.universe._
@@ -8,7 +8,7 @@ import scala.reflect.runtime.universe._
 class ModelTransformGenerator(codePackage: String, grpcPackage: String, outputDirectory: String,
     customTypeMap: Map[String, Type] = Map(), implicitTranslatorClass: Option[Class[_]]) {
 
-  private val logger = Logger(classOf[ModelTransformGenerator])
+  private val logger = LoggerFactory.getLogger(this.getClass)
   private val keepTypes: Set[String] = customTypeMap.keySet ++ ProtoGenerator.typeMap.keySet.map(_.toString)
 
   def writeTranslator(modelType: Type): Unit = {

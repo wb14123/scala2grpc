@@ -1,13 +1,13 @@
 package me.binwang.scala2grpc
 
-import com.typesafe.scalalogging.Logger
+import org.slf4j.LoggerFactory
 
 import scala.reflect.runtime.universe
 import scala.reflect.runtime.universe._
 
 object Names {
 
-  private val logger = Logger(classOf[ProtoGenerator])
+  private val logger = LoggerFactory.getLogger(this.getClass)
 
   def apiName(typ: Type): String = {
     typ.typeSymbol.name.toString.replace("Service", "API")

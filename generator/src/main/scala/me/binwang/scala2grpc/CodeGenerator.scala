@@ -1,7 +1,7 @@
 package me.binwang.scala2grpc
 
 import cats.effect.{IO, Resource}
-import com.typesafe.scalalogging.Logger
+import org.slf4j.LoggerFactory
 
 import java.io.{File, PrintWriter}
 import scala.reflect.runtime.universe._
@@ -12,7 +12,7 @@ class CodeGenerator(codePackage: String, translatorPackage: String, outputDirect
     enableParamLogging: Boolean, excludeLoggingParam: Seq[Regex], maxParamLoggingLength: Int) {
 
 
-  private val logger = Logger(classOf[CodeGenerator])
+  private val logger = LoggerFactory.getLogger(this.getClass)
 
   private val GENERATOR_PACKAGE = getClass.getPackage.getName
 
@@ -41,8 +41,13 @@ class CodeGenerator(codePackage: String, translatorPackage: String, outputDirect
        |
        |import cats.effect.{IO, Resource}
        |import io.grpc.ServerServiceDefinition
+       |import org.typelevel.log4cats.slf4j.Slf4jFactory
+       |import org.typelevel.log4cats.LoggerFactory
        |
        |class GRPCServer extends AbstractGRPCServer {
+       |
+       |  implicit val logging: LoggerFactory[IO] = Slf4jFactory.create[IO]
+       |
        |  override def getServiceDefinitions(services: Seq[Any]): Seq[Resource[IO, ServerServiceDefinition]] = {
        |    services.map {
        |$params
@@ -69,11 +74,12 @@ class CodeGenerator(codePackage: String, translatorPackage: String, outputDirect
        |
 
        |import cats.effect.IO
+       |import cats.effect.implicits._
        |import io.grpc.Metadata
        |import $codePackage.grpc_api._
        |import ${serviceType.toString}
-       |
-       |import com.typesafe.scalalogging.Logger
+       |import org.typelevel.log4cats.slf4j.Slf4jFactory
+       |import org.typelevel.log4cats.LoggerFactory
        |
        |""".stripMargin
     if (implicitTranslatorClass.isDefined) {
@@ -92,7 +98,7 @@ class CodeGenerator(codePackage: String, translatorPackage: String, outputDirect
     s"""
        |${generateClassHeader(serviceType)} {
        |
-       |  private val logger = Logger(getClass)
+       |  private val logger = LoggerFactory[IO].getLogger
        |
        |  private def trimString(s: String, length: Int): String = {
        |    if (s.length > length) {
@@ -109,7 +115,7 @@ class CodeGenerator(codePackage: String, translatorPackage: String, outputDirect
 
   private def generateClassHeader(serviceType: Type): String = {
     val serviceTypeName = serviceType.toString.split('.').last
-    s"""class ${className(serviceType)}(val $serviceVarName: $serviceTypeName)
+    s"""class ${className(serviceType)}(val $serviceVarName: $serviceTypeName)(implicit val loggerFactory: LoggerFactory[IO])
        |  extends ${Names.apiName(serviceType)}Fs2Grpc[IO, Metadata]""".stripMargin
   }
 
@@ -141,7 +147,7 @@ class CodeGenerator(codePackage: String, translatorPackage: String, outputDirect
     }
     s"""
        |  override def $methodName(in: ${Names.requestMsgName(method)}, ctx: Metadata): $returnSig = {
-       |    ${generateLogging(method)}
+       |    ${generateLogging(method)} >>
        |    $serviceVarName.$methodName(${generateMethodParams(method)})$transformResult
        |  }
        |""".stripMargin

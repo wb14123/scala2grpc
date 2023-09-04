@@ -1,9 +1,9 @@
 package me.binwang.scala2grpc
 
 import cats.effect.{IO, Resource}
-import com.typesafe.scalalogging.Logger
 import me.binwang.scala2grpc.Names._
 import me.binwang.scala2grpc.ProtoGenerator.typeMap
+import org.slf4j.LoggerFactory
 
 import java.io.{File, PrintWriter}
 import scala.reflect.runtime.universe._
@@ -31,7 +31,7 @@ object ProtoGenerator {
 class ProtoGenerator(javaPackage: String, grpcPackage: String, outputDirectory: String, customTypeMap: Map[String, Type] = Map()) {
 
 
-  private val logger = Logger(classOf[ProtoGenerator])
+  private val logger = LoggerFactory.getLogger(this.getClass)
 
   private var outputMessage = ""
 

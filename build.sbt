@@ -40,10 +40,10 @@ lazy val generator = (project in file("generator"))
     crossScalaVersions := supportedScalaVersions,
     libraryDependencies ++= Seq(
       "io.grpc" % "grpc-netty-shaded" % scalapb.compiler.Version.grpcJavaVersion,
+      "org.scala-lang" % "scala-reflect" % "2.13.10",
 
-      // log
-      "ch.qos.logback" % "logback-classic" % "1.2.10",
-      "com.typesafe.scala-logging" %% "scala-logging" % "3.9.5",
+      // this project doesn't use cats effect, IO style logger is only used in generated file
+      "org.typelevel" %% "log4cats-slf4j"   % "2.6.0",
     )
   )
 
