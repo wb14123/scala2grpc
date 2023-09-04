@@ -68,7 +68,7 @@ class ModelTransformGenerator(codePackage: String, grpcPackage: String, outputDi
     }
   }
 
-  def generateEnumTranslator(className: String, grpcType: String, typeName: String): String = {
+  private def generateEnumTranslator(className: String, grpcType: String, typeName: String): String = {
     val enumClass = typeName.split('.').dropRight(1).mkString(".")
     s"""
        |package $codePackage
@@ -85,7 +85,7 @@ class ModelTransformGenerator(codePackage: String, grpcPackage: String, outputDi
     """.stripMargin
   }
 
-  def generateFromGRPCField(name: String, typ: Type, deep: Int = 0, rawNameOpt: Option[String] = None): String = {
+  private def generateFromGRPCField(name: String, typ: Type, deep: Int = 0, rawNameOpt: Option[String] = None): String = {
     val translatorClass = Names.translatorClassName(typ)
     val rawName = rawNameOpt.getOrElse(name)
     if (keepTypes.contains(typ.toString)) {
@@ -113,8 +113,8 @@ class ModelTransformGenerator(codePackage: String, grpcPackage: String, outputDi
     }
   }
 
-  def generateToGRPCField(name: String, classGRPCType: String, typ: Type, deep: Int = 0,
-                          rawNameOpt: Option[String] = None, nestedClassNameOpt: Option[String] = None): String = {
+  private def generateToGRPCField(name: String, classGRPCType: String, typ: Type, deep: Int = 0,
+                                  rawNameOpt: Option[String] = None, nestedClassNameOpt: Option[String] = None): String = {
     val translatorClass = Names.translatorClassName(typ)
     val rawName = rawNameOpt.getOrElse(name)
     val nestedClassName = nestedClassNameOpt.getOrElse(rawName.capitalize)

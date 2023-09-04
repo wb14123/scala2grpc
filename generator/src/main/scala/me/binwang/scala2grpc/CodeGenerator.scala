@@ -58,7 +58,7 @@ class CodeGenerator(codePackage: String, translatorPackage: String, outputDirect
     writer.close()
   }
 
-  def generateServiceCode(serviceType: Type): String = {
+  private def generateServiceCode(serviceType: Type): String = {
     s"""${generateCodeHeader(serviceType)}
        |${generateClass(serviceType)}
        |""".stripMargin

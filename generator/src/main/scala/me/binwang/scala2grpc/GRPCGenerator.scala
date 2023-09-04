@@ -1,10 +1,7 @@
 package me.binwang.scala2grpc
 
 import cats.effect.{IO, Resource}
-import cats.implicits._
-import fs2.grpc.syntax.all.fs2GrpcSyntaxServerBuilder
 import io.grpc.{ServerBuilder, ServerServiceDefinition}
-import io.grpc.internal.AbstractServerImplBuilder
 
 import java.io.File
 import scala.reflect.runtime.universe._

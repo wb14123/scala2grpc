@@ -18,7 +18,7 @@ object ProtoGenerator {
     val FLOAT: String = "float"
   }
 
-  val typeMap = Map(
+  val typeMap: Map[Type, String] = Map(
     typeOf[String] -> GRPCTypes.STRING,
     typeOf[Int] -> GRPCTypes.INT32,
     typeOf[Long] -> GRPCTypes.INT64,
@@ -33,7 +33,7 @@ class ProtoGenerator(javaPackage: String, grpcPackage: String, outputDirectory: 
 
   private val logger = Logger(classOf[ProtoGenerator])
 
-  var outputMessage = ""
+  private var outputMessage = ""
 
   def addModelToFile(typ: Type): Unit = {
     val message = generateModel(typ)
@@ -82,7 +82,7 @@ class ProtoGenerator(javaPackage: String, grpcPackage: String, outputDirectory: 
     s"enum $messageTypeStr {\n$valueFields\n}\n"
   }
 
-  def generateAPI(serviceType: Type): String = {
+  private def generateAPI(serviceType: Type): String = {
     logger.info(s"Generate API $serviceType")
     val methods = Names.filterMethodsFromType(serviceType)
     val requestMessages = methods.map(generateRequestMsg).mkString("\n")
