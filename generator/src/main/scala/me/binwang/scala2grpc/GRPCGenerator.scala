@@ -19,7 +19,7 @@ trait GRPCGenerator {
   val customTypeMap: Map[String, Type] = Map()
   val implicitTransformClass: Option[Class[_]] = Some(DefaultGrpcTypeTranslator.getClass)
 
-  implicit val grpcHook: GrpcHook = new DefaultGrpcHook()
+  implicit def grpcHook: GrpcHook = new DefaultGrpcHook()
 
   def main(args: Array[String]): Unit = {
     if (args.length < 2) {
