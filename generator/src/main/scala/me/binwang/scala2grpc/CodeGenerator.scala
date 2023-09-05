@@ -5,11 +5,9 @@ import org.slf4j.LoggerFactory
 
 import java.io.{File, PrintWriter}
 import scala.reflect.runtime.universe._
-import scala.util.matching.Regex
 
 class CodeGenerator(codePackage: String, translatorPackage: String, outputDirectory: String,
-    customTypeMap: Map[String, Type] = Map(), implicitTranslatorClass: Option[Class[_]] = None,
-    enableParamLogging: Boolean, excludeLoggingParam: Seq[Regex], maxParamLoggingLength: Int) {
+    customTypeMap: Map[String, Type] = Map(), implicitTranslatorClass: Option[Class[_]] = None) {
 
 
   private val logger = LoggerFactory.getLogger(this.getClass)
@@ -41,14 +39,12 @@ class CodeGenerator(codePackage: String, translatorPackage: String, outputDirect
        |
        |import cats.effect.{IO, Resource}
        |import io.grpc.ServerServiceDefinition
-       |import org.typelevel.log4cats.slf4j.Slf4jFactory
-       |import org.typelevel.log4cats.LoggerFactory
+       |import me.binwang.scala2grpc.GrpcHook
        |
        |class GRPCServer extends AbstractGRPCServer {
        |
-       |  implicit val logging: LoggerFactory[IO] = Slf4jFactory.create[IO]
-       |
-       |  override def getServiceDefinitions(services: Seq[Any]): Seq[Resource[IO, ServerServiceDefinition]] = {
+       |  override def getServiceDefinitions(services: Seq[Any])
+       |      (implicit grpcIOHook: GrpcHook): Seq[Resource[IO, ServerServiceDefinition]] = {
        |    services.map {
        |$params
        |      case x => throw new Exception(s"No match service implementation found for $$x")
@@ -78,8 +74,9 @@ class CodeGenerator(codePackage: String, translatorPackage: String, outputDirect
        |import io.grpc.Metadata
        |import $codePackage.grpc_api._
        |import ${serviceType.toString}
-       |import org.typelevel.log4cats.slf4j.Slf4jFactory
-       |import org.typelevel.log4cats.LoggerFactory
+       |import me.binwang.scala2grpc.GrpcHook
+       |import me.binwang.scala2grpc.GrpcIOContext
+       |import me.binwang.scala2grpc.GrpcStreamContext
        |
        |""".stripMargin
     if (implicitTranslatorClass.isDefined) {
@@ -98,16 +95,6 @@ class CodeGenerator(codePackage: String, translatorPackage: String, outputDirect
     s"""
        |${generateClassHeader(serviceType)} {
        |
-       |  private val logger = LoggerFactory[IO].getLogger
-       |
-       |  private def trimString(s: String, length: Int): String = {
-       |    if (s.length > length) {
-       |      s.substring(0, length) + " ..."
-       |    } else {
-       |      s
-       |    }
-       |  }
-       |
        |$methodStr
        |}
        |""".stripMargin
@@ -115,8 +102,8 @@ class CodeGenerator(codePackage: String, translatorPackage: String, outputDirect
 
   private def generateClassHeader(serviceType: Type): String = {
     val serviceTypeName = serviceType.toString.split('.').last
-    s"""class ${className(serviceType)}(val $serviceVarName: $serviceTypeName)(implicit val loggerFactory: LoggerFactory[IO])
-       |  extends ${Names.apiName(serviceType)}Fs2Grpc[IO, Metadata]""".stripMargin
+    s"""class ${className(serviceType)}(val $serviceVarName: $serviceTypeName)
+       |  (implicit val grpcHook: GrpcHook) extends ${Names.apiName(serviceType)}Fs2Grpc[IO, Metadata]""".stripMargin
   }
 
   private def generateMethodCode(method: MethodSymbol): String = {
@@ -124,10 +111,10 @@ class CodeGenerator(codePackage: String, translatorPackage: String, outputDirect
     val methodName = Names.serviceMethodName(method)
     val returnName = Names.responseMsgName(method)
     val returnType = method.returnType
-    val (returnSig, insideType) =  if (returnType.typeSymbol == typeOf[IO[_]].typeSymbol) {
-      (s"IO[$returnName]", returnType.typeArgs.head)
+    val (returnSig, insideType, isIO) =  if (returnType.typeSymbol == typeOf[IO[_]].typeSymbol) {
+      (s"IO[$returnName]", returnType.typeArgs.head, true)
     } else if (returnType.typeSymbol == typeOf[fs2.Stream[IO, _]].typeSymbol) {
-      (s"fs2.Stream[IO, $returnName]", returnType.typeArgs(1))
+      (s"fs2.Stream[IO, $returnName]", returnType.typeArgs(1), false)
     } else {
       throw new Exception(s"Method return type should be IO or fs2.Stream[IO, _], real method: $method")
     }
@@ -145,27 +132,31 @@ class CodeGenerator(codePackage: String, translatorPackage: String, outputDirect
          |      .map($insideTypeName.toGRPC)
          |      .map(x => $returnName(result = Option(x)))""".stripMargin
     }
+    val wrapResult = if (isIO) {
+      wrapIOResult(method.name.toString)
+    } else {
+      wrapStreamResult(method.name.toString)
+    }
     s"""
-       |  override def $methodName(in: ${Names.requestMsgName(method)}, ctx: Metadata): $returnSig = {
-       |    ${generateLogging(method)} >>
-       |    $serviceVarName.$methodName(${generateMethodParams(method)})$transformResult
+       |  override def $methodName(in: ${Names.requestMsgName(method)}, metadata: Metadata): $returnSig = {
+       |    val response = $serviceVarName.$methodName(${generateMethodParams(method)})$transformResult
+       |$wrapResult
        |  }
        |""".stripMargin
   }
 
-  private def generateLogging(method: MethodSymbol): String = {
-    if (enableParamLogging) {
-      val params = method.paramLists.head.map { x =>
-        val paramName = s"${method.name}.${x.name}"
-        val exclude = excludeLoggingParam.exists(r => r.pattern.matcher(paramName).matches())
-        val value = if (exclude) "XXX" else s"$${trimString(in.${x.name}.toString(), $maxParamLoggingLength)}"
-        s"${x.name}: $value"
-      }.mkString(", ")
-      s"""logger.info(s"GRPC API invoked, API: ${method.name}, $params")"""
-    } else {
-      s"""logger.info("GRPC API invoked, API: ${method.name}")"""
-    }
+  private def wrapIOResult(apiName: String): String = {
+    s"""
+       |    val context = GrpcIOContext("$apiName", in, response, metadata)
+       |    grpcHook.wrapIO(context)
+       |""".stripMargin
+  }
 
+  private def wrapStreamResult(apiName: String): String = {
+    s"""
+       |    val context = GrpcStreamContext("$apiName", in, response, metadata)
+       |    grpcHook.wrapStream(context)
+       |""".stripMargin
   }
 
   private def generateMethodParams(method: MethodSymbol): String = {

@@ -6,5 +6,6 @@ import io.grpc.ServerServiceDefinition
 
 
 trait AbstractGRPCServer {
-  def getServiceDefinitions(services: Seq[Any]): Seq[Resource[IO, ServerServiceDefinition]]
+  def getServiceDefinitions(services: Seq[Any])
+      (implicit grpcIOHook: GrpcHook): Seq[Resource[IO, ServerServiceDefinition]]
 }

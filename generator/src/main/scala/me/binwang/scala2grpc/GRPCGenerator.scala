@@ -2,10 +2,10 @@ package me.binwang.scala2grpc
 
 import cats.effect.{IO, Resource}
 import io.grpc.{ServerBuilder, ServerServiceDefinition}
+import org.typelevel.log4cats.Logger
 
 import java.io.File
 import scala.reflect.runtime.universe._
-import scala.util.matching.Regex
 
 trait GRPCGenerator {
   val protoJavaPackage: String
@@ -14,12 +14,12 @@ trait GRPCGenerator {
   val modelClasses: Seq[Type]
   val serviceClasses: Seq[Type]
 
+  implicit val logger: Logger[IO]
+
   val customTypeMap: Map[String, Type] = Map()
   val implicitTransformClass: Option[Class[_]] = Some(DefaultGrpcTypeTranslator.getClass)
 
-  val enableParamLogging: Boolean = true
-  val excludeLoggingParam: Seq[Regex] = Seq()
-  val maxParamLoggingLength: Int = 1024
+  implicit val grpcHook: GrpcHook = new DefaultGrpcHook()
 
   def main(args: Array[String]): Unit = {
     if (args.length < 2) {
@@ -75,7 +75,7 @@ trait GRPCGenerator {
     val modelTransformGenerator = new ModelTransformGenerator(protoJavaPackage, protoJavaPackage,
       serviceOutputDirectory, customTypeMap, implicitTransformClass)
     val codeGenerator = new CodeGenerator(protoJavaPackage, protoJavaPackage, serviceOutputDirectory,
-      customTypeMap, implicitTransformClass, enableParamLogging, excludeLoggingParam, maxParamLoggingLength)
+      customTypeMap, implicitTransformClass)
     modelClasses.foreach(modelTransformGenerator.writeTranslator)
     serviceClasses.foreach(codeGenerator.writeService)
     codeGenerator.writeGRPCServerFile(serviceClasses)
