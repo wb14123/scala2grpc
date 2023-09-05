@@ -2,7 +2,7 @@ package me.binwang.scala2grpc
 
 import cats.effect.{IO, Resource}
 import io.grpc.{ServerBuilder, ServerServiceDefinition}
-import org.typelevel.log4cats.Logger
+import org.typelevel.log4cats.LoggerFactory
 
 import java.io.File
 import scala.reflect.runtime.universe._
@@ -14,7 +14,7 @@ trait GRPCGenerator {
   val modelClasses: Seq[Type]
   val serviceClasses: Seq[Type]
 
-  implicit val logger: Logger[IO]
+  implicit def loggerFactory: LoggerFactory[IO]
 
   val customTypeMap: Map[String, Type] = Map()
   val implicitTransformClass: Option[Class[_]] = Some(DefaultGrpcTypeTranslator.getClass)

@@ -2,7 +2,7 @@ package me.binwang.scala2grpc
 
 import cats.effect.{Clock, IO}
 import io.grpc.Metadata
-import org.typelevel.log4cats.Logger
+import org.typelevel.log4cats.{Logger, LoggerFactory}
 
 trait GrpcHook {
   def wrapIO[T](context: GrpcIOContext[T]): IO[T]
@@ -24,7 +24,9 @@ case class GrpcStreamContext[T](
   metadata: Metadata,
 )
 
-class DefaultGrpcHook(implicit logger: Logger[IO]) extends GrpcHook {
+class DefaultGrpcHook(implicit loggerFactory: LoggerFactory[IO]) extends GrpcHook {
+
+  private val logger = LoggerFactory.getLoggerFromClass[IO](this.getClass)
 
   private def trimString(s: String, length: Int): String = {
     if (s.length > length) {
