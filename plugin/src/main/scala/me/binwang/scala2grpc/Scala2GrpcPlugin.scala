@@ -33,5 +33,6 @@ object Scala2GrpcPlugin extends AutoPlugin {
     }.value ,
     generateGRPCCode := (generateGRPCCode dependsOn generateProto).value,
     Compile / unmanagedSourceDirectories += grpcGenCodeDirectory.value,
+    cleanFiles += protobufDirectory.value / "grpc-api.proto",
   )
 }
