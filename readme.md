@@ -106,13 +106,13 @@ addSbtPlugin("me.binwang.scala2grpc" % "plugin" % "1.0.0")
 ```
 // file build.sbt
 
-enablePlugins(AkkaGrpcPlugin)
+enablePlugins(Fs2Grpc)
 enablePlugins(Scala2GrpcPlugin)
 
 
 grpcGeneratorMainClass := "me.binwang.example.GenerateGRPC" // Set this class to the object defined below
 
-libraryDependencies += "me.binwang.scala2grpc" %% "generator" % "0.1.0"
+libraryDependencies += "me.binwang.scala2grpc" %% "generator" % "1.0.0"
 ```
 
 ### 2. Create an object to implement `GRPCGenerator`
@@ -171,7 +171,7 @@ object ModelTranslator extends GrpcTypeTranslator {
 
 ```
 
-## 4. (Optional) Define custom GRPC hook
+### 4. (Optional) Define custom GRPC hook
 
 By default, `GRPCGenerator` provides `DefaultGrpcHook` as `grpcHook`:
 
@@ -179,7 +179,7 @@ By default, `GRPCGenerator` provides `DefaultGrpcHook` as `grpcHook`:
 implicit def grpcHook: GrpcHook = new DefaultGrpcHook()
 ```
 
-You can override it by provide a custom hook that implements `GrpcHook`:
+You can override it by providing a custom hook that implements `GrpcHook`:
 
 ```Scala
 trait GrpcHook {
@@ -204,7 +204,7 @@ case class GrpcStreamContext[T](
 )
 ```
 
-You can use `GrpcIOContext` or `GrpcStreamContext` to do anything you want in `wrapIO` and `wrapStream`. For example, and implementation of print logs before and after the request is:
+You are able to do anything in `wrapIO` and `wrapStream` as long as you return `context.response` at the end. For example, an implementation of print logs before and after the request could be:
 
 ```
   override def wrapIO[T](context: GrpcIOContext[T]): IO[T] = {
@@ -225,8 +225,7 @@ You can use `GrpcIOContext` or `GrpcStreamContext` to do anything you want in `w
 
 ### 5. Run sbt task to generate GRPC proto and code
 
-Now you can run sbt task to generate grpc files. If any of the model or service classes has been changed, you also need to re-run the task before compile the code.
-
+Now you can run sbt task to generate grpc files. If any of the model or service classes has been changed, you also need to re-run the task before compile the code. `clean` is needed because there maybe outdated generated classes.
 
 ```
 sbt clean generateGRPCCode
@@ -238,7 +237,6 @@ Then compile the code (or run other tasks)
 sbt compile
 ```
 
-`clean` is needed because there maybe outdated generated classes.
 
 **If you only want to generate gRPC proto file** without be able to run gRPC server, run this task instead:
 
