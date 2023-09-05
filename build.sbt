@@ -5,7 +5,7 @@ import xerial.sbt.Sonatype.autoImport.sonatypePublishToBundle
 lazy val scala212 = "2.12.17"
 lazy val scala213 = "2.13.10"
 
-ThisBuild / version := "1.0.0"
+ThisBuild / version := "1.0.1-SNAPSHOT"
 ThisBuild / organization := "me.binwang.scala2grpc"
 ThisBuild / scalaVersion := scala212
 ThisBuild / publishTo := sonatypePublishToBundle.value
