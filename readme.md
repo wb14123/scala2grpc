@@ -129,7 +129,7 @@ object GenerateGRPC extends GRPCGenerator {
   // Add `package example` at the top of generated GRPC proto file
   override val protoPackage: String = "example"
 
-  // provide logging for `DefaultGrpcHook` (see step 4 for details)
+  // provide logging for gRPC hooks (see step 4 for details)
   override implicit def loggerFactory: LoggerFactory[IO] = Slf4jFactory.create[IO]
 
   // Optional: if there are unsupported types in Scala classes, use this map to define the type mapping
@@ -173,11 +173,7 @@ object ModelTranslator extends GrpcTypeTranslator {
 
 ### 4. (Optional) Define custom GRPC hook
 
-By default, `GRPCGenerator` provides `DefaultGrpcHook` as `grpcHook`:
-
-```Scala
-implicit def grpcHook: GrpcHook = new DefaultGrpcHook()
-```
+By default, `GRPCGenerator` provides `ChainedGrpcHook` as `grpcHook`.
 
 You can override it by providing a custom hook that implements `GrpcHook`:
 
@@ -216,10 +212,24 @@ You are able to do anything in `wrapIO` and `wrapStream` as long as you return `
   }
 ```
 
-`DefaultGrpcHook` provides some default behaviours that is handy:
+You can use multiple hooks by using `ChainedGrpcHook`:
+
+```
+  implicit def grpcHook: GrpcHook = new ChainedGrpcHook(Seq(
+    new RequestLoggerHook(),
+    new ErrorWrapperHook(),
+  ))
+```
+
+The hooks in default ChainedGrpcHook:
+
+RequestLoggerHook:
 
 * Log before request, includes API name and request params.
 * Log after request, include API name, request param and time used.
+
+ErrorWrapperHook: 
+
 * Log error if there is any.
 * Provides `mapError` method that you can override so that you can map exceptions to GRPC exceptions.
 
