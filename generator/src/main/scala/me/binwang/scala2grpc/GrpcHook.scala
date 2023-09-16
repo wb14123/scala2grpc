@@ -43,7 +43,7 @@ class ErrorWrapperHook(implicit loggerFactory: LoggerFactory[IO]) extends GrpcHo
     new StatusRuntimeException(status, metadata)
   }
 
-  private def handleAttempt[T](metadata: Metadata, msg: String)(result: Either[Throwable, T]): IO[Either[Throwable, T]] = {
+  protected def handleAttempt[T](metadata: Metadata, msg: String)(result: Either[Throwable, T]): IO[Either[Throwable, T]] = {
     result match {
       case Left(err) => logger.error(err)(msg).map(_ => Left(mapError(err, metadata)))
       case x => IO.pure(x)
