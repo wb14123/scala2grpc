@@ -68,30 +68,21 @@ class ErrorWrapperHook(implicit loggerFactory: LoggerFactory[IO]) extends GrpcHo
 class RequestLoggerHook(implicit loggerFactory: LoggerFactory[IO]) extends GrpcHook {
   private val logger = LoggerFactory.getLoggerFromClass[IO](this.getClass)
 
-  private def trimString(s: String, length: Int): String = {
-    if (s.length > length) {
-      s.substring(0, length) + " ..."
-    } else {
-      s
-    }
-  }
 
   override def wrapIO[T](context: GrpcIOContext[T]): IO[T] = {
     for {
       startTime <- Clock[IO].monotonic
-      requestStr = trimString(context.request.toString, 1024)
-      _ <- logger.info(s"GRPC API started, API: ${context.apiName}, request: $requestStr")
+      _ <- logger.info(s"GRPC API started, API: ${context.apiName}")
       res <- context.response
       endTime <- Clock[IO].monotonic
-      _ <- logger.info(s"GRPC API finished, API: ${context.apiName}, request: $requestStr, time used: ${endTime - startTime}")
+      _ <- logger.info(s"GRPC API finished, API: ${context.apiName}, time used: ${endTime - startTime}")
     } yield res
   }
 
   override def wrapStream[T](context: GrpcStreamContext[T]): fs2.Stream[IO, T] = {
-    val requestStr = trimString(context.request.toString, 1024)
     for {
-      _ <- fs2.Stream.eval(logger.info(s"GRPC stream API started, API: ${context.apiName}, request: $requestStr"))
-      res <- context.response
+      _ <- fs2.Stream.eval(logger.info(s"GRPC stream API started, API: ${context.apiName}"))
+      res <- context.response.onFinalizeWeak(logger.info(s"Grpc stream API finished, API: ${context.apiName}"))
     } yield res
   }
 }
