@@ -1,5 +1,7 @@
 # Scala2grpc
 
+[![Maven Central](https://maven-badges.herokuapp.com/maven-central/me.binwang.scala2grpc/plugin/badge.svg)](https://maven-badges.herokuapp.com/maven-central/me.binwang.scala2grpc/plugin)
+
 
 Scala2grpc is a SBT plugin to make it non-invasive to use gRPC with Scala.
 
