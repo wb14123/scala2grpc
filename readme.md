@@ -293,3 +293,8 @@ sbt +publishSigned
 sbt sonatypeBundleRelease
 ```
 
+## Sponsors
+
+Sponsored by:
+
+* [Java Profiler: JProfiler](https://www.ej-technologies.com/products/jprofiler/overview.html)
