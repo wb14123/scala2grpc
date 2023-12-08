@@ -30,7 +30,8 @@ val supportedScalaVersions = List(scala212, scala213)
 lazy val root = (project in file("."))
   .aggregate(generator, plugin)
   .settings(
-    crossScalaVersions := Nil
+    name := "scala2grpc",
+    crossScalaVersions := Nil,
   )
 
 lazy val generator = (project in file("generator"))
