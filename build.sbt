@@ -1,6 +1,7 @@
 import sbt.Keys.{libraryDependencies, organization, publishTo}
 import sbt.url
 import xerial.sbt.Sonatype.autoImport.sonatypePublishToBundle
+import xerial.sbt.Sonatype.sonatypeCentralHost
 
 lazy val scala212 = "2.12.17"
 lazy val scala213 = "2.13.10"
@@ -9,8 +10,7 @@ ThisBuild / version := "1.0.2-SNAPSHOT"
 ThisBuild / organization := "me.binwang.scala2grpc"
 ThisBuild / scalaVersion := scala212
 ThisBuild / publishTo := sonatypePublishToBundle.value
-ThisBuild / sonatypeCredentialHost := "s01.oss.sonatype.org"
-ThisBuild / sonatypeRepository := "https://s01.oss.sonatype.org/service/local"
+ThisBuild / sonatypeCredentialHost := sonatypeCentralHost
 ThisBuild / licenses := Seq("AGPL" -> url("https://github.com/wb14123/scala2grpc/blob/master/LICENSE"))
 ThisBuild / homepage := Some(url("https://github.com/wb14123/scala2grpc"))
 ThisBuild / scmInfo := Some(ScmInfo(
