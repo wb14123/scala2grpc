@@ -2,12 +2,12 @@ import sbt.Keys.{libraryDependencies, organization, publishTo}
 import sbt.url
 import xerial.sbt.Sonatype.autoImport.sonatypePublishToBundle
 
-lazy val scala212 = "2.12.17"
-lazy val scala213 = "2.13.10"
+lazy val scala212 = "2.12.20"
+lazy val scala213 = "2.13.11"
 
 ThisBuild / version := "1.0.2-SNAPSHOT"
 ThisBuild / organization := "me.binwang.scala2grpc"
-ThisBuild / scalaVersion := scala212
+ThisBuild / scalaVersion := scala213
 ThisBuild / publishTo := sonatypePublishToBundle.value
 ThisBuild / sonatypeCredentialHost := "s01.oss.sonatype.org"
 ThisBuild / sonatypeRepository := "https://s01.oss.sonatype.org/service/local"
@@ -42,6 +42,7 @@ lazy val generator = (project in file("generator"))
     libraryDependencies ++= Seq(
       "io.grpc" % "grpc-netty-shaded" % scalapb.compiler.Version.grpcJavaVersion,
       "org.scala-lang" % "scala-reflect" % "2.13.10",
+      "org.jsoup" % "jsoup" % "1.19.1",
 
       // this project doesn't use cats effect, IO style logger is only used in generated file
       "org.typelevel" %% "log4cats-slf4j"   % "2.6.0",
