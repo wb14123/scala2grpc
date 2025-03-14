@@ -28,11 +28,11 @@ object ProtoGenerator {
   )
 }
 
-class ProtoGenerator(javaPackage: String, grpcPackage: String, outputDirectory: String, customTypeMap: Map[String, Type] = Map()) {
-
+class ProtoGenerator(javaPackage: String, grpcPackage: String, outputDirectory: String, scalaDocDirectory: String, customTypeMap: Map[String, Type] = Map()) {
 
   private val logger = LoggerFactory.getLogger(this.getClass)
 
+  private val scalaDocParser = new ScalaDocParser(scalaDocDirectory)
   private var outputMessage = ""
 
   def addModelToFile(typ: Type): Unit = {
@@ -87,10 +87,11 @@ class ProtoGenerator(javaPackage: String, grpcPackage: String, outputDirectory: 
     val methods = Names.filterMethodsFromType(serviceType)
     val requestMessages = methods.map(generateRequestMsg).mkString("\n")
     val responseMessages = methods.map(generateResponseMsg).mkString("\n")
-    val methodsMessages = methods.map(generateMethodMsg).mkString("\n")
+    val methodsMessages = methods.map(m => generateMethodMsg(serviceType.typeSymbol.asClass, m)).mkString("\n")
 
+    val comment = wrapGrpcComment(scalaDocParser.getClassDoc(serviceType.typeSymbol.asClass))
     val serviceMsg = s"""
-                        |service ${apiName(serviceType)} {
+                        |${comment}service ${apiName(serviceType)} {
                         |$methodsMessages
                         |}
                         |""".stripMargin
@@ -208,7 +209,7 @@ class ProtoGenerator(javaPackage: String, grpcPackage: String, outputDirectory: 
        |""".stripMargin
   }
 
-  private def generateMethodMsg(method: MethodSymbol): String = {
+  private def generateMethodMsg(cls: ClassSymbol, method: MethodSymbol): String = {
     val returnType = method.returnType
     val isStream = returnType.typeSymbol == typeOf[fs2.Stream[IO, _]].typeSymbol
     val responseType = responseMsgName(method)
@@ -217,6 +218,19 @@ class ProtoGenerator(javaPackage: String, grpcPackage: String, outputDirectory: 
     } else {
       responseType
     }
-    s"    rpc ${methodName(method)} (${requestMsgName(method)}) returns ($serviceTypeStr);"
+    val comment = wrapGrpcComment(scalaDocParser.getMethodDoc(cls, method), 4)
+    comment + s"    rpc ${methodName(method)} (${requestMsgName(method)}) returns ($serviceTypeStr);"
+  }
+
+  private def wrapGrpcComment(comment: String, indent: Int = 0): String = {
+    val indentStr = " ".repeat(indent)
+    val lines = comment.split('\n')
+    if (lines.isEmpty) {
+      ""
+    } else if (lines.length <= 1) {
+      indentStr + "// " + comment + "\n"
+    } else {
+      ("/*" +: lines :+ "*/").map(indentStr + _).mkString("\n") + "\n"
+    }
   }
 }

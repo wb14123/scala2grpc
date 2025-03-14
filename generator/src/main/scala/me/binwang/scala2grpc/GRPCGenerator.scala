@@ -28,7 +28,11 @@ trait GRPCGenerator {
     if (args.length < 2) {
       printUsage()
     } else if (args(0).equals("proto")) {
-      generateProtoFile(args(1))
+      if (args.length < 3) {
+        printUsage()
+      } else {
+        generateProtoFile(args(1), args(2))
+      }
     } else if (args(0).equals("code")) {
       generateCode(args(1))
     } else {
@@ -60,13 +64,13 @@ trait GRPCGenerator {
   private def printUsage(): Unit = {
     println(
       """Usage:
-        |  Generate protocol buffer file: <exec> proto <output_dir>
+        |  Generate protocol buffer file: <exec> proto <output_dir> <scaladoc_dir>
         |  Generate Scala code from protocol buffer file: <exec> code <output_dir>
         |""".stripMargin)
   }
 
-  private def generateProtoFile(protoOutputDirectory: String): Unit = {
-    val protoGenerator = new ProtoGenerator(protoJavaPackage, protoPackage, protoOutputDirectory, customTypeMap)
+  private def generateProtoFile(protoOutputDirectory: String, scalaDocDirectory: String): Unit = {
+    val protoGenerator = new ProtoGenerator(protoJavaPackage, protoPackage, protoOutputDirectory, scalaDocDirectory, customTypeMap)
     modelClasses.foreach(protoGenerator.addModelToFile)
     serviceClasses.foreach(protoGenerator.addAPIToFile)
     protoGenerator.write()
