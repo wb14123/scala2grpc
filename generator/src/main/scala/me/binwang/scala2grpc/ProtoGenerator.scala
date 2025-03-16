@@ -229,7 +229,7 @@ class ProtoGenerator(javaPackage: String, grpcPackage: String, outputDirectory: 
   private def wrapGrpcComment(comment: String, indent: Int = 0): String = {
     val indentStr = " ".repeat(indent)
     val lines = comment.split('\n')
-    if (lines.isEmpty) {
+    if (comment.strip().isEmpty) {
       ""
     } else if (lines.length <= 1) {
       indentStr + "// " + comment + "\n"

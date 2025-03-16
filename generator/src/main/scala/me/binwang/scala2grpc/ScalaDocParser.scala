@@ -15,11 +15,7 @@ class ScalaDocParser(docRoot: String) {
 
   def getMethodDoc(cls: ClassSymbol, method: MethodSymbol): String = {
     // TODO: also include @return comment
-    getMethodElement(cls, method).flatMap(e => Option(
-      e.getElementsByClass("shortcomment")
-        .first()
-        .text()
-    )).getOrElse("")
+    getMethodElement(cls, method).map(e => e.select(".fullcomment > .comment").text()).getOrElse("")
   }
 
   def getMethodParamDoc(cls: ClassSymbol, method: MethodSymbol, paramName: String): String = {
