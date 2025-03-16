@@ -17,8 +17,7 @@ object Scala2GrpcPlugin extends AutoPlugin {
 
   override lazy val projectSettings = Seq(
     protobufDirectory := baseDirectory.value / "src" / "main" / "protobuf",
-    // TODO: fix this to not hardcode the scaladoc path
-    scalaDocDirectory := baseDirectory.value / "target" / "scala-2.13" / "api",
+    scalaDocDirectory := (Compile / target).value / ("scala-" + scalaBinaryVersion.value) / "api",
     generateProto := Def.taskDyn {
       val outputPath = protobufDirectory.value.getPath
       val scalaDocPath = scalaDocDirectory.value.getPath
@@ -26,7 +25,7 @@ object Scala2GrpcPlugin extends AutoPlugin {
       Def.task {
         (Compile / runMain).toTask(s" $mainClass proto $outputPath $scalaDocPath").value
       }
-    }.value,
+    }.dependsOn(Compile / doc).value,
     grpcGenCodeDirectory := crossTarget.value / "grpc-gen" / "main",
     generateGRPCCode := Def.taskDyn {
       val outputPath = grpcGenCodeDirectory.value.getPath
