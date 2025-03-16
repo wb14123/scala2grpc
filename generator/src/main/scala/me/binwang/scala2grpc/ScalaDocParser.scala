@@ -10,8 +10,7 @@ import scala.reflect.runtime.universe.{ClassSymbol, MethodSymbol}
 class ScalaDocParser(docRoot: String) {
 
   def getClassDoc(cls: ClassSymbol): String = {
-    val html = getClassDocHtml(cls)
-    html.getElementById("comment").getElementsByClass("comment").text()
+    getClassElement(cls).getElementsByClass("comment").text()
   }
 
   def getMethodDoc(cls: ClassSymbol, method: MethodSymbol): String = {
@@ -24,8 +23,23 @@ class ScalaDocParser(docRoot: String) {
   }
 
   def getMethodParamDoc(cls: ClassSymbol, method: MethodSymbol, paramName: String): String = {
-    val paramElements = getMethodElement(cls, method)
-      .flatMap { e =>Option(e.getElementsByClass("paramcmts").first())}
+    getMethodElement(cls, method) match {
+      case None => ""
+      case Some(e) => getParamDoc(e, paramName)
+    }
+  }
+
+  def getClassParamDoc(cls: ClassSymbol, paramName: String): String = {
+    getParamDoc(getClassElement(cls), paramName)
+  }
+
+  private def getClassElement(cls: ClassSymbol): Element = {
+    val html = getClassDocHtml(cls)
+    html.getElementById("comment")
+  }
+
+  private def getParamDoc(elm: Element, paramName: String): String = {
+    val paramElements = Option(elm.getElementsByClass("paramcmts").first())
       .map(_.children().asScala)
       .getOrElse(Seq())
     val keyIdx = paramElements.zipWithIndex.find(_._1.text().equals(paramName)).map(_._2)

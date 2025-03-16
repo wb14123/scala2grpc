@@ -118,9 +118,11 @@ class ProtoGenerator(javaPackage: String, grpcPackage: String, outputDirectory: 
   private def generateFieldsMsg(cls: ClassSymbol, method: Option[MethodSymbol], fields: Seq[(String, Type)]): String = {
     fields.zipWithIndex.map { case ((name, typ), idx) =>
       val comment = if (method.isDefined) {
-        wrapGrpcComment(scalaDocParser.getMethodParamDoc(cls, method.get, name), 4)
-      } else ""
-      comment + generateField(name, typ, idx + 1)._1
+        scalaDocParser.getMethodParamDoc(cls, method.get, name)
+      } else {
+        scalaDocParser.getClassParamDoc(cls, name)
+      }
+      wrapGrpcComment(comment, 4) + generateField(name, typ, idx + 1)._1
     }.mkString("\n") + "\n"
   }
 
