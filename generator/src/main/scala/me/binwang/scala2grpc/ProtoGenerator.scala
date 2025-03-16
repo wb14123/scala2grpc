@@ -39,15 +39,11 @@ class ProtoGenerator(javaPackage: String, grpcPackage: String, outputDirectory: 
     val message = generateModel(typ)
     val messageName = modelName(typ)
     outputMessage += "\n"
-    outputMessage += s"// Define $messageName\n"
-    outputMessage += "\n"
     outputMessage += message
   }
 
   def addAPIToFile(serviceType: Type): Unit = {
     val message = generateAPI(serviceType)
-    outputMessage += "\n"
-    outputMessage += s"// Define $serviceType\n"
     outputMessage += "\n"
     outputMessage += message
   }
@@ -61,7 +57,8 @@ class ProtoGenerator(javaPackage: String, grpcPackage: String, outputDirectory: 
 
   def generateModel(messageType: Type): String = {
     logger.info(s"Generate model $messageType")
-    if (Names.isEnum(messageType)) {
+    val comment = wrapGrpcComment(scalaDocParser.getClassDoc(messageType.typeSymbol.asClass))
+    val content = if (Names.isEnum(messageType)) {
       generateEnum(messageType)
     } else {
       val messageTypeStr = modelName(messageType)
@@ -71,6 +68,7 @@ class ProtoGenerator(javaPackage: String, grpcPackage: String, outputDirectory: 
       val fieldsMsg = generateFieldsMsg(messageType.typeSymbol.asClass, None, fields)
       s"message $messageTypeStr {\n$fieldsMsg}\n"
     }
+    comment + content
   }
 
   private def generateEnum(typ: Type): String = {
