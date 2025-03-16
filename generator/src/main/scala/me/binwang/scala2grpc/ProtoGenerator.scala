@@ -37,7 +37,6 @@ class ProtoGenerator(javaPackage: String, grpcPackage: String, outputDirectory: 
 
   def addModelToFile(typ: Type): Unit = {
     val message = generateModel(typ)
-    val messageName = modelName(typ)
     outputMessage += "\n"
     outputMessage += message
   }
@@ -84,9 +83,9 @@ class ProtoGenerator(javaPackage: String, grpcPackage: String, outputDirectory: 
     logger.info(s"Generate API $serviceType")
     val cls = serviceType.typeSymbol.asClass
     val methods = Names.filterMethodsFromType(serviceType)
-    val requestMessages = methods.map(m => generateRequestMsg(cls, m)).mkString("\n")
+    val requestMessages = methods.map(m => generateRequestMsg(cls, m)).mkString("")
     val responseMessages = methods.map(generateResponseMsg).mkString("\n")
-    val methodsMessages = methods.map(m => generateMethodMsg(cls, m)).mkString("\n")
+    val methodsMessages = methods.map(m => generateMethodMsg(cls, m)).mkString("\n\n")
 
     val comment = wrapGrpcComment(scalaDocParser.getClassDoc(serviceType.typeSymbol.asClass))
     val serviceMsg = s"""
@@ -123,7 +122,7 @@ class ProtoGenerator(javaPackage: String, grpcPackage: String, outputDirectory: 
         scalaDocParser.getClassParamDoc(cls, name)
       }
       wrapGrpcComment(comment, 4) + generateField(name, typ, idx + 1)._1
-    }.mkString("\n") + "\n"
+    }.mkString("\n\n") + "\n"
   }
 
   private def getGRPCType(typ: Type): String = {
@@ -166,11 +165,10 @@ class ProtoGenerator(javaPackage: String, grpcPackage: String, outputDirectory: 
     }
 
     val indent = " ".repeat(level * 4 - 1)
-    val newline = if (index == 1) "" else "\n"
     val nestedMsg = msg match {
       case "" => ""
       case fieldMsg =>
-        s"""|$newline$indent message $realType {
+        s"""|$indent message $realType {
             |$fieldMsg
             |$indent }
             |""".stripMargin
@@ -189,7 +187,7 @@ class ProtoGenerator(javaPackage: String, grpcPackage: String, outputDirectory: 
     }
     val fields = methods.head.map { field => (field.name.toString, field.typeSignature) }
     val fieldsMsg = generateFieldsMsg(cls, Some(method), fields)
-    s"message ${requestMsgName(method)} {\n$fieldsMsg}\n"
+    s"message ${requestMsgName(method)} {\n$fieldsMsg}\n\n"
   }
 
   private def generateResponseMsg(method: MethodSymbol): String = {
