@@ -56,18 +56,18 @@ class ProtoGenerator(javaPackage: String, grpcPackage: String, outputDirectory: 
 
   def generateModel(messageType: Type): String = {
     logger.info(s"Generate model $messageType")
-    val comment = wrapGrpcComment(scalaDocParser.getClassDoc(messageType.typeSymbol.asClass))
-    val content = if (Names.isEnum(messageType)) {
+    if (Names.isEnum(messageType)) {
       generateEnum(messageType)
     } else {
+      val comment = wrapGrpcComment(scalaDocParser.getClassDoc(messageType.typeSymbol.asClass))
       val messageTypeStr = modelName(messageType)
       val fields = messageType.members.sorted
         .collect { case m: MethodSymbol if m.isCaseAccessor => m }
         .map { field => (field.name.toString, field.returnType) }
       val fieldsMsg = generateFieldsMsg(messageType.typeSymbol.asClass, None, fields)
-      s"message $messageTypeStr {\n$fieldsMsg}\n"
+      val content = s"message $messageTypeStr {\n$fieldsMsg}\n"
+      comment + content
     }
-    comment + content
   }
 
   private def generateEnum(typ: Type): String = {
