@@ -68,7 +68,7 @@ class ProtoGenerator(javaPackage: String, grpcPackage: String, outputDirectory: 
       val fields = messageType.members.sorted
         .collect { case m: MethodSymbol if m.isCaseAccessor => m }
         .map { field => (field.name.toString, field.returnType) }
-      val fieldsMsg = generateFieldsMsg(fields)
+      val fieldsMsg = generateFieldsMsg(messageType.typeSymbol.asClass, None, fields)
       s"message $messageTypeStr {\n$fieldsMsg}\n"
     }
   }
@@ -84,10 +84,11 @@ class ProtoGenerator(javaPackage: String, grpcPackage: String, outputDirectory: 
 
   private def generateAPI(serviceType: Type): String = {
     logger.info(s"Generate API $serviceType")
+    val cls = serviceType.typeSymbol.asClass
     val methods = Names.filterMethodsFromType(serviceType)
-    val requestMessages = methods.map(generateRequestMsg).mkString("\n")
+    val requestMessages = methods.map(m => generateRequestMsg(cls, m)).mkString("\n")
     val responseMessages = methods.map(generateResponseMsg).mkString("\n")
-    val methodsMessages = methods.map(m => generateMethodMsg(serviceType.typeSymbol.asClass, m)).mkString("\n")
+    val methodsMessages = methods.map(m => generateMethodMsg(cls, m)).mkString("\n")
 
     val comment = wrapGrpcComment(scalaDocParser.getClassDoc(serviceType.typeSymbol.asClass))
     val serviceMsg = s"""
@@ -116,9 +117,12 @@ class ProtoGenerator(javaPackage: String, grpcPackage: String, outputDirectory: 
 
   }
 
-  private def generateFieldsMsg(fields: Seq[(String, Type)]): String = {
+  private def generateFieldsMsg(cls: ClassSymbol, method: Option[MethodSymbol], fields: Seq[(String, Type)]): String = {
     fields.zipWithIndex.map { case ((name, typ), idx) =>
-      generateField(name, typ, idx + 1)._1
+      val comment = if (method.isDefined) {
+        wrapGrpcComment(scalaDocParser.getMethodParamDoc(cls, method.get, name), 4)
+      } else ""
+      comment + generateField(name, typ, idx + 1)._1
     }.mkString("\n") + "\n"
   }
 
@@ -174,7 +178,7 @@ class ProtoGenerator(javaPackage: String, grpcPackage: String, outputDirectory: 
     (s"$nestedMsg$indent $prefix$realType $name = $index;", name)
   }
 
-  private def generateRequestMsg(method: MethodSymbol): String = {
+  private def generateRequestMsg(cls: ClassSymbol, method: MethodSymbol): String = {
     val methods = method.paramLists
     if (methods.isEmpty) {
       logger.warn("Method length is 0")
@@ -184,7 +188,7 @@ class ProtoGenerator(javaPackage: String, grpcPackage: String, outputDirectory: 
       throw new Exception(s"Only support one method with the same name: $methods")
     }
     val fields = methods.head.map { field => (field.name.toString, field.typeSignature) }
-    val fieldsMsg = generateFieldsMsg(fields)
+    val fieldsMsg = generateFieldsMsg(cls, Some(method), fields)
     s"message ${requestMsgName(method)} {\n$fieldsMsg}\n"
   }
 
