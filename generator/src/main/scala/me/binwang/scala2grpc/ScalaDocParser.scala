@@ -14,8 +14,18 @@ class ScalaDocParser(docRoot: String) {
   }
 
   def getMethodDoc(cls: ClassSymbol, method: MethodSymbol): String = {
-    // TODO: also include @return comment
-    getMethodElement(cls, method).map(e => e.select(".fullcomment > .comment").text()).getOrElse("")
+    getMethodElement(cls, method).map{ e =>
+      val comment = e.select(".fullcomment > .comment").text()
+      val returnSection = getParamDoc(e, "returns")
+      val returnCmt = if (returnSection.nonEmpty) {
+        "Returns " + returnSection
+      } else ""
+      if (comment.nonEmpty && returnCmt.nonEmpty) {
+        comment + "\n" + returnCmt
+      } else {
+        comment + returnCmt
+      }
+    }.getOrElse("")
   }
 
   def getMethodParamDoc(cls: ClassSymbol, method: MethodSymbol, paramName: String): String = {
