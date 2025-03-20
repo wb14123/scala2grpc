@@ -56,18 +56,18 @@ class ProtoGenerator(javaPackage: String, grpcPackage: String, outputDirectory: 
 
   def generateModel(messageType: Type): String = {
     logger.info(s"Generate model $messageType")
-    if (Names.isEnum(messageType)) {
+    val comment = wrapGrpcComment(scalaDocParser.getClassDoc(messageType))
+    val content = if (Names.isEnum(messageType)) {
       generateEnum(messageType)
     } else {
-      val comment = wrapGrpcComment(scalaDocParser.getClassDoc(messageType.typeSymbol.asClass))
       val messageTypeStr = modelName(messageType)
       val fields = messageType.members.sorted
         .collect { case m: MethodSymbol if m.isCaseAccessor => m }
         .map { field => (field.name.toString, field.returnType) }
-      val fieldsMsg = generateFieldsMsg(messageType.typeSymbol.asClass, None, fields)
-      val content = s"message $messageTypeStr {\n$fieldsMsg}\n"
-      comment + content
+      val fieldsMsg = generateFieldsMsg(messageType, None, fields)
+      s"message $messageTypeStr {\n$fieldsMsg}\n"
     }
+    comment + content
   }
 
   private def generateEnum(typ: Type): String = {
@@ -81,13 +81,12 @@ class ProtoGenerator(javaPackage: String, grpcPackage: String, outputDirectory: 
 
   private def generateAPI(serviceType: Type): String = {
     logger.info(s"Generate API $serviceType")
-    val cls = serviceType.typeSymbol.asClass
     val methods = Names.filterMethodsFromType(serviceType)
-    val requestMessages = methods.map(m => generateRequestMsg(cls, m)).mkString("")
+    val requestMessages = methods.map(m => generateRequestMsg(serviceType, m)).mkString("")
     val responseMessages = methods.map(generateResponseMsg).mkString("\n")
-    val methodsMessages = methods.map(m => generateMethodMsg(cls, m)).mkString("\n\n")
+    val methodsMessages = methods.map(m => generateMethodMsg(serviceType, m)).mkString("\n\n")
 
-    val comment = wrapGrpcComment(scalaDocParser.getClassDoc(serviceType.typeSymbol.asClass))
+    val comment = wrapGrpcComment(scalaDocParser.getClassDoc(serviceType))
     val serviceMsg = s"""
                         |${comment}service ${apiName(serviceType)} {
                         |$methodsMessages
@@ -114,7 +113,7 @@ class ProtoGenerator(javaPackage: String, grpcPackage: String, outputDirectory: 
 
   }
 
-  private def generateFieldsMsg(cls: ClassSymbol, method: Option[MethodSymbol], fields: Seq[(String, Type)]): String = {
+  private def generateFieldsMsg(cls: Type, method: Option[MethodSymbol], fields: Seq[(String, Type)]): String = {
     fields.zipWithIndex.map { case ((name, typ), idx) =>
       val comment = if (method.isDefined) {
         scalaDocParser.getMethodParamDoc(cls, method.get, name)
@@ -176,7 +175,7 @@ class ProtoGenerator(javaPackage: String, grpcPackage: String, outputDirectory: 
     (s"$nestedMsg$indent $prefix$realType $name = $index;", name)
   }
 
-  private def generateRequestMsg(cls: ClassSymbol, method: MethodSymbol): String = {
+  private def generateRequestMsg(cls: Type, method: MethodSymbol): String = {
     val methods = method.paramLists
     if (methods.isEmpty) {
       logger.warn("Method length is 0")
@@ -211,7 +210,7 @@ class ProtoGenerator(javaPackage: String, grpcPackage: String, outputDirectory: 
        |""".stripMargin
   }
 
-  private def generateMethodMsg(cls: ClassSymbol, method: MethodSymbol): String = {
+  private def generateMethodMsg(cls: Type, method: MethodSymbol): String = {
     val returnType = method.returnType
     val isStream = returnType.typeSymbol == typeOf[fs2.Stream[IO, _]].typeSymbol
     val responseType = responseMsgName(method)
