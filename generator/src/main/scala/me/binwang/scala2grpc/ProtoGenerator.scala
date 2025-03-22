@@ -225,13 +225,41 @@ class ProtoGenerator(javaPackage: String, grpcPackage: String, outputDirectory: 
 
   private def wrapGrpcComment(comment: String, indent: Int = 0): String = {
     val indentStr = " ".repeat(indent)
-    val lines = comment.split('\n')
+    val lines = comment.split('\n').flatMap{l => breakLines(l, indent).split('\n')}
     if (comment.strip().isEmpty) {
       ""
     } else if (lines.length <= 1) {
       indentStr + "// " + comment + "\n"
     } else {
       ("/*" +: lines :+ "*/").map(indentStr + _).mkString("\n") + "\n"
+    }
+  }
+
+  /*
+   It's better to keep the line breaks in the source code file. But generated html doc has already lost the information,
+   so this is the best we can do to break the long comment into multiple lines.
+   */
+  private def breakLines(line: String, indent: Int, maxWidth: Int = 80): String = {
+    val commentPrefixLen = 3
+    val maxLen = maxWidth - commentPrefixLen - indent
+    if (line.length <= maxLen) {
+      line
+    } else {
+      val words = line.split(' ')
+      var result = ""
+      var curLine = ""
+      words.foreach { word =>
+        if ((curLine.length + word.length + 1) > maxLen) {
+          result += curLine
+          curLine = "\n"
+        }
+        if (curLine.isEmpty || curLine.equals("\n")) {
+          curLine += word
+        } else {
+          curLine += " " + word
+        }
+      }
+      result + curLine
     }
   }
 }
