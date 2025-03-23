@@ -28,6 +28,14 @@ class ScalaDocParser(docRoot: String) {
     }.getOrElse("")
   }
 
+  // valueName is in format of className#fieldName
+  def getEnumValueDoc(cls: Type, valueName: String): String = {
+    Option(getClassDocHtml(cls).getElementById("allMembers")
+      .getElementsByAttributeValue("name", valueName)
+      .first())
+      .map(_.getElementsByClass("cmt").text()).getOrElse("")
+  }
+
   def getMethodParamDoc(cls: Type, method: MethodSymbol, paramName: String): String = {
     getMethodElement(cls, method) match {
       case None => ""

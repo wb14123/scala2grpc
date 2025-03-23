@@ -75,7 +75,10 @@ class ProtoGenerator(javaPackage: String, grpcPackage: String, outputDirectory: 
     val className = typ.asInstanceOf[TypeRef].pre.typeSymbol.asClass.fullName
     val enumObject = getClass.getClassLoader.loadClass(className + "$").getField("MODULE$").get(null)
     val values = enumObject.getClass.getMethod("values").invoke(enumObject).asInstanceOf[scala.Enumeration#ValueSet]
-    val valueFields = values.zipWithIndex.map{case (value, idx) =>  s"    $value = $idx;"}.mkString("\n")
+    val valueFields = values.zipWithIndex.map{case (value, idx) =>
+      val comment = wrapGrpcComment(scalaDocParser.getEnumValueDoc(typ, s"$className#$value"), 4)
+      comment + s"    $value = $idx;\n"
+    }.mkString("\n")
     s"enum $messageTypeStr {\n$valueFields\n}\n"
   }
 
