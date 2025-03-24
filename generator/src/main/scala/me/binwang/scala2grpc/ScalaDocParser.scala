@@ -68,8 +68,7 @@ class ScalaDocParser(docRoot: String) {
     val html = getClassDocHtml(cls)
     val methodName = s"${cls.toString}#${method.name.toString}"
     Option(html
-      .getElementById("allMembers")
-      .getElementsByAttributeValue("name", methodName)
+      .select(s"#allMembers li[name=\"$methodName\"]")
       .first())
   }
 
