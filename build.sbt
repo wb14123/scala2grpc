@@ -5,7 +5,7 @@ import xerial.sbt.Sonatype.autoImport.sonatypePublishToBundle
 lazy val scala212 = "2.12.20"
 lazy val scala213 = "2.13.16"
 
-ThisBuild / version := "1.2.0-SNAPSHOT"
+ThisBuild / version := "1.2.0"
 ThisBuild / organization := "me.binwang.scala2grpc"
 ThisBuild / scalaVersion := scala213
 ThisBuild / publishTo := sonatypePublishToBundle.value
@@ -25,7 +25,7 @@ ThisBuild / dependencyCheckAssemblyAnalyzerEnabled := Option(false)
 // ThisBuild / dependencyCheckFailBuildOnCVSS := 4
 
 
-val supportedScalaVersions = List(scala212, scala213)
+val supportedScalaVersions = List(scala213)
 
 lazy val root = (project in file("."))
   .aggregate(generator, plugin)
