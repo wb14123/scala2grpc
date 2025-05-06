@@ -11,6 +11,13 @@ trait GRPCGenerator {
   val protoJavaPackage: String
   val protoPackage: String
 
+  /**
+   * Any text to add at the beginning of the generated proto file, after the proto package definition.
+   *
+   * This can be proto package definition for some other languages, comments for the whole service and so on.
+   */
+  val header: Option[String] = None
+
   val modelClasses: Seq[Type]
   val serviceClasses: Seq[Type]
 
@@ -40,7 +47,7 @@ trait GRPCGenerator {
     }
   }
 
-  def getServiceDefinitions(services: Seq[Any]): Seq[Resource[IO, ServerServiceDefinition]] = {
+  private def getServiceDefinitions(services: Seq[Any]): Seq[Resource[IO, ServerServiceDefinition]] = {
     Class
       .forName(s"$protoJavaPackage.GRPCServer")
       .getDeclaredConstructor()
@@ -70,7 +77,7 @@ trait GRPCGenerator {
   }
 
   private def generateProtoFile(protoOutputDirectory: String, scalaDocDirectory: String): Unit = {
-    val protoGenerator = new ProtoGenerator(protoJavaPackage, protoPackage, protoOutputDirectory, scalaDocDirectory, customTypeMap)
+    val protoGenerator = new ProtoGenerator(protoJavaPackage, protoPackage, header, protoOutputDirectory, scalaDocDirectory, customTypeMap)
     modelClasses.foreach(protoGenerator.addModelToFile)
     serviceClasses.foreach(protoGenerator.addAPIToFile)
     protoGenerator.write()

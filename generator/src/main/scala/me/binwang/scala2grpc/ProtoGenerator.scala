@@ -28,7 +28,8 @@ object ProtoGenerator {
   )
 }
 
-class ProtoGenerator(javaPackage: String, grpcPackage: String, outputDirectory: String, scalaDocDirectory: String, customTypeMap: Map[String, Type] = Map()) {
+class ProtoGenerator(javaPackage: String, grpcPackage: String, header: Option[String],
+    outputDirectory: String, scalaDocDirectory: String, customTypeMap: Map[String, Type] = Map()) {
 
   private val logger = LoggerFactory.getLogger(this.getClass)
 
@@ -107,6 +108,7 @@ class ProtoGenerator(javaPackage: String, grpcPackage: String, outputDirectory: 
     s"""
        |syntax = "proto3";
        |
+       |${header.getOrElse("")}
        |option java_multiple_files = true;
        |option java_package = "$javaPackage";
        |
