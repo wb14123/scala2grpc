@@ -16,6 +16,7 @@ object ProtoGenerator {
     val BOOL: String = "bool"
     val DOUBLE: String = "double"
     val FLOAT: String = "float"
+    val BYTES: String = "bytes"
   }
 
   val typeMap: Map[Type, String] = Map(
@@ -24,7 +25,8 @@ object ProtoGenerator {
     typeOf[Long] -> GRPCTypes.INT64,
     typeOf[Boolean] -> GRPCTypes.BOOL,
     typeOf[Double] -> GRPCTypes.DOUBLE,
-    typeOf[Float] -> GRPCTypes.FLOAT
+    typeOf[Float] -> GRPCTypes.FLOAT,
+    typeOf[Array[Byte]] -> GRPCTypes.BYTES,
   )
 }
 

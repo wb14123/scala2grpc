@@ -50,6 +50,7 @@ class ModelTransformGenerator(codePackage: String, grpcPackage: String, outputDi
         |package $codePackage
         |
         |$importTranslator
+        |import com.google.protobuf.ByteString
         |
         |object $className {
         |  def fromGRPC(obj: $grpcType): $typeName = {
@@ -88,7 +89,9 @@ class ModelTransformGenerator(codePackage: String, grpcPackage: String, outputDi
   private def generateFromGRPCField(name: String, typ: Type, deep: Int = 0, rawNameOpt: Option[String] = None): String = {
     val translatorClass = Names.translatorClassName(typ)
     val rawName = rawNameOpt.getOrElse(name)
-    if (keepTypes.contains(typ.toString)) {
+    if (isByteArray(typ)) {
+      s"obj.$name.toByteArray"
+    } else if (keepTypes.contains(typ.toString)) {
       if (name.isEmpty) {
         s"obj"
       } else {
@@ -119,7 +122,9 @@ class ModelTransformGenerator(codePackage: String, grpcPackage: String, outputDi
     val rawName = rawNameOpt.getOrElse(name)
     val nestedClassName = nestedClassNameOpt.getOrElse(rawName.capitalize)
     val field = if (deep == 0) s"obj.$name" else "obj"
-    if (keepTypes.contains(typ.toString)) {
+    if (isByteArray(typ)) {
+      s"ByteString.copyFrom($field)"
+    } else if (keepTypes.contains(typ.toString)) {
       field
     } else if (typ.typeSymbol == typeOf[Option[_]].typeSymbol || typ.typeSymbol == typeOf[Seq[_]].typeSymbol) {
       if (deep == 0) {
@@ -144,6 +149,11 @@ class ModelTransformGenerator(codePackage: String, grpcPackage: String, outputDi
         s"$translatorClass.toGRPC($field)"
       }
     }
+  }
+
+  private def isByteArray(typ: Type): Boolean = {
+    typ.typeSymbol == typeOf[Array[Byte]].typeSymbol &&
+      typ.typeArgs.headOption.exists(_.typeSymbol == typeOf[Byte].typeSymbol)
   }
 
 }
